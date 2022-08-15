@@ -1,0 +1,101 @@
+# Copyright (c) 2022 Contributors as noted in the AUTHORS file
+#
+# This file is part of Solo5, a sandboxed execution environment.
+#
+# Permission to use, copy, modify, and/or distribute this software
+# for any purpose with or without fee is hereby granted, provided
+# that the above copyright notice and this permission notice appear
+# in all copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+# WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+# AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
+# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+# OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+# NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+# CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+ifndef CONFIG_PLATFORM_DIR
+$(error CONFIG_PLATFORM_DIR must be set, install a target platform package for Solo5)
+endif
+
+GCC_PATH ?= `arm-none-eabi-gcc -print-sysroot`
+ifndef GCC_PATH
+$(error GCC_PATH must be set, configure $PATH so that you can execute arm-none-eabi-gcc)
+endif
+
+### (Required) CPU architecture
+MARCH := armv7-r+vfpv3-d16
+
+# SoC specific directory path
+MCU_SDK_VER := mcu_plus_sdk_am64x_08_03_00_18
+MCU_PATH ?= $(HOME)/ti/$(MCU_SDK_VER)
+
+# Common flags for object compiling (binding and tender)
+DEFINES_common := \
+	-DSOC_AM64X \
+    -DENET_ENABLE_PER_ICSSG=1 \
+    -D__$(CPU_ARCH)__
+
+CFLAGS_common := \
+	-march=$(MARCH) \
+	-mfloat-abi=hard \
+	-mfpu=vfpv3-d16 \
+	-marm \
+	-nolibc \
+	-Wno-int-to-pointer-cast \
+	-Wno-pointer-to-int-cast \
+	-Wno-unused-parameter \
+	-fdata-sections \
+	-ffunction-sections
+
+CFLAGS_debug := \
+	-D_DEBUG_=1
+
+ConfigName := release
+
+### (Required) flags for object compiling ###
+CFLAGS_SOC := $(CFLAGS_common) $(DEFINES_common) $(CFLAGS_debug)
+HOSTCFLAGS_SOC := $(CFLAGS_SOC)
+
+### (Required) Additional source code files 
+frt_soc_SRCS := 
+
+### (Required) Additional header file paths (tender)
+CPPFLAGS_SOC := -I$(CONFIG_PLATFORM_DIR)/include \
+                -I$(MCU_PATH)/source \
+                -I$(MCU_PATH)/source/kernel/dpl \
+                -I$(MCU_PATH)/source/kernel/freertos/FreeRTOS-Kernel/include \
+                -I$(MCU_PATH)/source/kernel/freertos/dpl/common \
+                -I$(MCU_PATH)/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F
+HOSTCPPFLAGS_SOC := $(CPPFLAGS_SOC)
+
+### (Required) Linker file path with its absolute path
+LD_FILE := \
+	$(CONFIG_PLATFORM_DIR)/solo5_frt.lds
+
+### (Required) Library paths
+LIBS_PATH := \
+	-L${MCU_PATH}/source/kernel/freertos/lib \
+	-L${MCU_PATH}/source/drivers/lib \
+	-L${MCU_PATH}/source/board/lib \
+    -L${MCU_PATH}/source/networking/enet/lib \
+    -L${MCU_PATH}/source/networking/lwip/lib \
+    -L${OPAM_SWITCH_PREFIX}/solo5-frt-am64x-r5/lib
+
+### (Required) Library names
+LIBS := \
+    -l:libsoc.a \
+	-l:freertos.am64x.r5f.gcc-armv7.${ConfigName}.lib \
+	-l:drivers.am64x.r5f.gcc-armv7.${ConfigName}.lib \
+	-l:board.am64x.r5f.gcc-armv7.${ConfigName}.lib \
+    -l:enet-lwip-icssg.am64x.r5f.ti-arm-clang.${ConfigName}.lib \
+    -l:lwip-freertos.am64x.r5f.ti-arm-clang.${ConfigName}.lib \
+    -l:lwip-contrib.am64x.r5f.ti-arm-clang.${ConfigName}.lib
+
+### (Required) Link flags for the linker
+LD_LFLAGS :=
+
+### (Required) Link flags for the compiler
+CC_LFLAGS :=
