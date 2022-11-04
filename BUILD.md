@@ -95,13 +95,13 @@ $ export MCU_SDK_TOP=/path/to/ti/mcu_plus_sdk_am64x_08_03_00_18
 $ export SYSCFG_TOP=/path/to/ti/sysconfig_1.12.1
 ```
 
+## Register a repository for MCUs with opam
+
+Follow [this instruction](https://github.com/TImada/mirage-embedded-repo/blob/main/HOWTO.md).
+
 ## Solo5/MirageOS installation
 
 ```bash
-# Add an additional repository for MCUs to opam (repository name: "embedded")
-$ opam repo add embedded https://github.com/TImada/mirage-embedded-repo
-$ opam update
-
 # Install the mirage package
 $ opam install mirage
 
