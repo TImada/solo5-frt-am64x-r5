@@ -28,6 +28,9 @@ endif
 ### (Required) CPU architecture
 MARCH := armv7-r+vfpv3-d16
 
+### (Required) Processor family
+PROC_FAMILY := ARM_V7R
+
 # SoC specific directory path
 MCU_SDK_VER := mcu_plus_sdk_am64x_08_03_00_18
 MCU_PATH ?= $(HOME)/ti/$(MCU_SDK_VER)
