@@ -1,0 +1,1092 @@
+diff --git a/examples/networking/lwip/enet_lwip_cpsw/test_enet.c b/examples/networking/lwip/enet_lwip_cpsw/test_enet.c
+index 9494d77..93b49fb 100644
+--- a/examples/networking/lwip/enet_lwip_cpsw/test_enet.c
++++ b/examples/networking/lwip/enet_lwip_cpsw/test_enet.c
+@@ -58,7 +58,7 @@ extern void Board_TxRxDelaySet(const EnetBoard_PhyCfg *boardPhyCfg);
+ extern uint32_t Board_getEthBoardId(void);
+ extern uint32_t Board_getEthType(void);
+ 
+-static void EnetApp_addMCastEntry(Enet_Type enetType,
++void EnetApp_addMCastEntry(Enet_Type enetType,
+                                   uint32_t instId,
+                                   uint32_t coreId,
+                                   const uint8_t *testMCastAddr,
+@@ -259,7 +259,7 @@ int enet_lwip_example(void *args)
+     return 0;
+ }
+ 
+-static void EnetApp_addMCastEntry(Enet_Type enetType,
++void EnetApp_addMCastEntry(Enet_Type enetType,
+                                   uint32_t instId,
+                                   uint32_t coreId,
+                                   const uint8_t *testMCastAddr,
+diff --git a/source/drivers/uart/v2/uart.h b/source/drivers/uart/v2/uart.h
+index 2ad788f..064745e 100644
+--- a/source/drivers/uart/v2/uart.h
++++ b/source/drivers/uart/v2/uart.h
+@@ -1386,6 +1386,7 @@ static inline uint32_t UART_readLineStatus(uint32_t baseAddr)
+ 
+ static inline uint8_t UART_getCharFifo(uint32_t baseAddr, uint8_t *readBuf)
+ {
++    (void)            readBuf;
+     uint8_t           readByte = 0;
+     uint32_t          waitCount = UART_ERROR_COUNT;
+     uint32_t          errorVal;
+diff --git a/source/drivers/udma/udma_utils.c b/source/drivers/udma/udma_utils.c
+index 5b31c3d..b4e91a8 100755
+--- a/source/drivers/udma/udma_utils.c
++++ b/source/drivers/udma/udma_utils.c
+@@ -247,7 +247,13 @@ uint64_t Udma_defaultVirtToPhyFxn(const void *virtAddr,
+                                   uint32_t chNum,
+                                   void *appData)
+ {
++#if defined (__aarch64__)
+     return ((uint64_t) virtAddr);
++#else
++    /* R5 is 32-bit machine. This is a workaround to avoid incorrect cast by GCC */
++    uintptr_t va = (uintptr_t)virtAddr;
++    return (uint64_t)va;
++#endif
+ }
+ 
+ void *Udma_defaultPhyToVirtFxn(uint64_t phyAddr,
+diff --git a/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h b/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h
+index f860fa7..27b5089 100644
+--- a/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h
++++ b/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h
+@@ -99,7 +99,7 @@ extern "C"
+ #define configCHECK_FOR_STACK_OVERFLOW          (0)
+ #endif
+ #define configQUEUE_REGISTRY_SIZE               (32)
+-#define configUSE_QUEUE_SETS                    (0)
++#define configUSE_QUEUE_SETS                    (1)
+ #define configUSE_TIME_SLICING                  (0) /* keep as 0 to get same functionality as SysBIOS6 */
+ #define configUSE_NEWLIB_REENTRANT              (0)
+ #define configENABLE_BACKWARD_COMPATIBILITY     (1)
+@@ -118,7 +118,7 @@ extern "C"
+                                                      */
+ #define configSUPPORT_DYNAMIC_ALLOCATION        (1)
+ #define configTOTAL_HEAP_SIZE                   (4*1024) /* not used when heap_3.c is the selected heap */
+-#define configAPPLICATION_ALLOCATED_HEAP        (0)
++#define configAPPLICATION_ALLOCATED_HEAP        (1)
+ 
+ /* run-time stats config */
+ #if (configOPTIMIZE_FOR_LATENCY==0)
+diff --git a/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7 b/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7
+index fe17057..96eb383 100644
+--- a/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7
++++ b/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7
+@@ -47,7 +47,7 @@ FILES_common := \
+     timers.c \
+     queue.c \
+     list.c \
+-    heap_3.c \
++    heap_4.c \
+     FreeRTOS_POSIX_clock.c \
+     FreeRTOS_POSIX_mqueue.c \
+     FreeRTOS_POSIX_pthread_barrier.c \
+diff --git a/source/networking/enet/core/src/common/enet_utils_dflt.c b/source/networking/enet/core/src/common/enet_utils_dflt.c
+index 977b543..bd31fc2 100644
+--- a/source/networking/enet/core/src/common/enet_utils_dflt.c
++++ b/source/networking/enet/core/src/common/enet_utils_dflt.c
+@@ -109,7 +109,12 @@ static void EnetUtilsDflt_print(const char *fmt, ...)
+ static uint64_t EnetUtilsDflt_virtToPhysDflt(const void *virtAddr,
+                                              void *appData)
+ {
++#if defined(__aarch64__)
+     return ((uint64_t)virtAddr);
++#else
++    uintptr_t va = (uintptr_t)virtAddr;
++    return (uint64_t)va;
++#endif
+ }
+ 
+ static void *EnetUtilsDflt_physToVirtDflt(uint64_t phyAddr,
+diff --git a/source/networking/enet/core/src/core/enet_utils.c b/source/networking/enet/core/src/core/enet_utils.c
+index 4d9d993..473f96f 100644
+--- a/source/networking/enet/core/src/core/enet_utils.c
++++ b/source/networking/enet/core/src/core/enet_utils.c
+@@ -212,7 +212,13 @@ void *EnetUtils_physToVirt(uint64_t physAddr,
+ static uint64_t EnetUtils_virtToPhysDflt(const void *virtAddr,
+                                          void *appData)
+ {
++#if defined (__aartch64__)
+     return ((uint64_t)virtAddr);
++#else
++    /* R5 is 32-bit machine. This is a workaround to avoid incorrect cast b    y GCC */
++    uintptr_t va = (uintptr_t)virtAddr;
++    return (uint64_t)va;
++#endif
+ }
+ 
+ static void *EnetUtils_physToVirtDflt(uint64_t phyAddr,
+diff --git a/source/networking/enet/core/src/dma/udma/enet_udma_priv.c b/source/networking/enet/core/src/dma/udma/enet_udma_priv.c
+index 8d59741..96c78b1 100644
+--- a/source/networking/enet/core/src/dma/udma/enet_udma_priv.c
++++ b/source/networking/enet/core/src/dma/udma/enet_udma_priv.c
+@@ -433,6 +433,9 @@ int32_t EnetUdma_submitPkts(EnetPer_Handle hPer,
+     uint32_t ringWrIdx = 0U, ringMemEleCnt = 0U;
+     uint32_t tosIndex, i;
+     uint8_t dscpIPv4En, tosVal;
++#ifdef __arm__
++    uintptr_t bufptr;
++#endif
+ 
+     isExposedRing = (Udma_ringGetMode(hUdmaRing) == TISCI_MSG_VALUE_RM_RING_MODE_RING);
+ #if defined(SOC_AM64X) || defined(SOC_AM243X)
+@@ -468,10 +471,19 @@ int32_t EnetUdma_submitPkts(EnetPer_Handle hPer,
+                                     (uint32_t)ENET_PKTSTATE_DMA_NOT_WITH_HW,
+                                     (uint32_t)ENET_PKTSTATE_DMA_WITH_HW);
+ 
++#ifdef __arm__
++            bufptr = (uintptr_t)dmaPkt->bufPtr;
++            CSL_udmapCppi5SetBufferAddr(pHostDesc, (uint64_t)bufptr);
++#else
+             CSL_udmapCppi5SetBufferAddr(pHostDesc, (uint64_t)dmaPkt->bufPtr);
++#endif
+             CSL_udmapCppi5SetBufferLen(pHostDesc, dmaPkt->userBufLen);
+ 
++#ifdef __arm__
++            CSL_udmapCppi5SetOrgBufferAddr(pHostDesc, (uint64_t)bufptr);
++#else
+             CSL_udmapCppi5SetOrgBufferAddr(pHostDesc, (uint64_t)dmaPkt->bufPtr);
++#endif
+             CSL_udmapCppi5SetOrgBufferLen(pHostDesc, dmaPkt->orgBufLen);
+ 
+             CSL_udmapCppi5SetPktLen(pHostDesc,CSL_UDMAP_CPPI5_PD_DESCINFO_DTYPE_VAL_HOST, dmaPkt->userBufLen);
+@@ -1477,10 +1489,17 @@ int32_t EnetUdma_ringDequeue(Udma_RingHandle hUdmaRing,
+ 
+             *pDmaDesc = pVirtDmaDesc;
+ 
++#ifdef __arm__
++            pHpdDesc->hostDesc.bufPtr =
++                (uintptr_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.bufPtr, NULL);
++            pHpdDesc->hostDesc.orgBufPtr =
++                (uintptr_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.orgBufPtr, NULL);
++#else
+             pHpdDesc->hostDesc.bufPtr =
+                 (uint64_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.bufPtr, NULL);
+             pHpdDesc->hostDesc.orgBufPtr =
+                 (uint64_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.orgBufPtr, NULL);
++#endif
+ 
+             /* Debug point -> The Cortex A cores can do speculative reads which
+              * can mandate to do cache_invalidate before packets are received.
+@@ -1682,9 +1701,14 @@ void EnetUdma_buffDescInit(EnetUdma_CpswHpdDesc *hpdDesc)
+     CSL_udmapCppi5SetSrcTag(hostDesc, 0x0000U);
+     CSL_udmapCppi5SetDstTag(hostDesc, 0x0000U);
+     CSL_udmapCppi5LinkDesc(hostDesc, 0U);
+-    CSL_udmapCppi5SetBufferAddr(hostDesc, (uint64_t)NULL);
+     CSL_udmapCppi5SetBufferLen(hostDesc, 0U);
++#ifdef __arm__
++    CSL_udmapCppi5SetBufferAddr(hostDesc, (uint64_t)0ULL);
++    CSL_udmapCppi5SetOrgBufferAddr(hostDesc, (uint64_t)0ULL);
++#else
++    CSL_udmapCppi5SetBufferAddr(hostDesc, (uint64_t)NULL);
+     CSL_udmapCppi5SetOrgBufferAddr(hostDesc, (uint64_t)NULL);
++#endif
+     CSL_udmapCppi5SetOrgBufferLen(hostDesc, 0U);
+ }
+ 
+diff --git a/source/networking/enet/makefile.cpsw.am64x.r5f.gcc-armv7 b/source/networking/enet/makefile.cpsw.am64x.r5f.gcc-armv7
+new file mode 100644
+index 0000000..311f97b
+--- /dev/null
++++ b/source/networking/enet/makefile.cpsw.am64x.r5f.gcc-armv7
+@@ -0,0 +1,222 @@
++#
++# Auto generated makefile
++#
++
++export MCU_PLUS_SDK_PATH?=$(abspath ../../..)
++include $(MCU_PLUS_SDK_PATH)/imports.mak
++
++CC=arm-none-eabi-gcc
++AR=arm-none-eabi-ar
++
++PROFILE?=release
++ConfigName:=$(PROFILE)
++
++LIBNAME:=enet-lwip-cpsw.am64x.r5f.gcc-armv7.$(PROFILE).lib
++
++FILES_common := \
++    enet.c \
++    enet_trace.c \
++    enet_utils.c \
++    enet_osal.c \
++    enet_queue.c \
++    enet_rm.c \
++    enet_osal_dflt.c \
++    enet_utils_dflt.c \
++    enet_phymdio_dflt.c \
++    mod_null.c \
++    mdio.c \
++    cpsw_macport.c \
++    cpsw_macport_intervlan.c \
++    cpsw_hostport.c \
++    cpsw_ale.c \
++    cpsw_stats.c \
++    cpsw_cpts.c \
++    per_null.c \
++    cpsw_intervlan.c \
++    cpsw.c \
++    enet_hostport.c \
++    enet_udma.c \
++    enet_udma_priv.c \
++    csl_cpgmac_sl.c \
++    csl_cpsw.c \
++    csl_cpsw_ss.c \
++    csl_cpsw_ale_9g_tblcfg.c \
++    csl_cpts.c \
++    csl_mdio.c \
++    k3_soc.c \
++    enet_soc.c \
++    enetphy.c \
++    generic_phy.c \
++    dp83869.c \
++    dp83867.c \
++    enet_apputils.c \
++    enet_appmemutils.c \
++    enet_appethpatterns.c \
++    enet_appsoc.c \
++    enet_apprmcfg.c \
++    enet_udmautils.c \
++    enet_ioctlutils.c \
++    enet_apputils_k3.c \
++    enet_appboardutils.c \
++    enet_mcm.c \
++    lwip2enet.c \
++    lwip2lwipif.c \
++    lwipifcb.c \
++    default_netif.c \
++    pbufQ.c \
++
++FILES_PATH_common = \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/core \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/mod \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/per \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/per/V1 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/common \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/dma/udma \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/emac/V5/priv \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5/V5_0/priv \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5/priv \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpts/V0/priv \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5/priv \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3/am64x_am243x \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/V3 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/defcfg \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src/V1 \
++
++INCLUDES_common := \
++    -I${MCU_PLUS_SDK_PATH}/source \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/V3 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/core \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/phy \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/hw_include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/emac/V5 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5/V5_0 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpts/V0 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm/include \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/FreeRTOS-Kernel/include \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am64x/r5f \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/inc \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/include \
++
++DEFINES_common := \
++    -DSOC_AM64X \
++    -DMAKEFILE_BUILD \
++    -DBUILD_MCU1_0 \
++    -DBUILD_MCU \
++    -DENET_CFG_ASSERT=1 \
++    -DENET_CFG_PRINT_ENABLE \
++    -DENET_CFG_TRACE_LEVEL=3 \
++    -DENET_ENABLE_PER_CPSW=1 \
++    -Dam64x_am243x_evm \
++    -DENABLE_ENET_LOG \
++
++CFLAGS_common := \
++    -mcpu=cortex-r5 \
++    -mfloat-abi=hard \
++    -mfpu=vfpv3-d16 \
++    -mthumb \
++    -Wall \
++    -Werror \
++    -g \
++    -Wno-enum-compare \
++    -Wno-gnu-variable-sized-type-not-at-end \
++    -Wno-unused-function \
++    -mno-unaligned-access \
++    -Wno-extra \
++    -falign-functions=2 \
++    -ffunction-sections \
++    -fdata-sections \
++
++CFLAGS_cpp_common := \
++    -Wno-c99-designator \
++    -Wno-extern-c-compat \
++    -Wno-c++11-narrowing \
++    -Wno-reorder-init-list \
++    -Wno-deprecated-register \
++    -Wno-writable-strings \
++    -Wno-enum-compare \
++    -Wno-reserved-user-defined-literal \
++    -Wno-unused-const-variable \
++    -x c++ \
++
++CFLAGS_debug := \
++    -D_DEBUG_=1 \
++
++CFLAGS_release := \
++    -O2 \
++
++ARFLAGS_common := \
++    rc \
++
++FILES := $(FILES_common) $(FILES_$(PROFILE))
++ASMFILES := $(ASMFILES_common) $(ASMFILES_$(PROFILE))
++FILES_PATH := $(FILES_PATH_common) $(FILES_PATH_$(PROFILE))
++CFLAGS := $(CFLAGS_common) $(CFLAGS_$(PROFILE))
++ASMFLAGS := $(CFLAGS_common) $(CFLAGS_$(PROFILE))
++ifeq ($(CPLUSPLUS_BUILD), yes)
++CFLAGS += $(CFLAGS_cpp_common)
++endif
++DEFINES := $(DEFINES_common) $(DEFINES_$(PROFILE))
++INCLUDES := $(INCLUDES_common) $(INCLUDE_$(PROFILE))
++ARFLAGS := $(ARFLAGS_common) $(ARFLAGS_$(PROFILE))
++
++LIBDIR := lib
++OBJDIR := obj/am64x/ti-arm-clang/$(PROFILE)/r5f/enet-lwip-cpsw/
++OBJS := $(FILES:%.c=%.obj)
++OBJS += $(ASMFILES:%.S=%.obj)
++DEPS := $(FILES:%.c=%.d)
++
++vpath %.obj $(OBJDIR)
++vpath %.c $(FILES_PATH)
++vpath %.S $(FILES_PATH)
++
++$(OBJDIR)/%.obj %.obj: %.c
++	@echo  Compiling: $(LIBNAME): $<
++	$(CC) -c $(CFLAGS) $(INCLUDES) $(DEFINES) -MMD -o $(OBJDIR)/$@ $<
++
++$(OBJDIR)/%.obj %.obj: %.S
++	@echo  Compiling: $(LIBNAME): $<
++	$(CC) -c $(ASMFLAGS) -o $(OBJDIR)/$@ $<
++
++all: $(LIBDIR)/$(LIBNAME)
++
++$(LIBDIR)/$(LIBNAME): $(OBJS) | $(LIBDIR)
++	@echo  .
++	@echo  Archiving: $(LIBNAME) to $@ ...
++	$(AR) $(ARFLAGS) $@ $(addprefix $(OBJDIR), $(OBJS))
++	@echo  Archiving: $(LIBNAME) Done !!!
++	@echo  .
++
++clean:
++	@echo  Cleaning: $(LIBNAME) ...
++	$(RMDIR) $(OBJDIR)
++	$(RM) $(LIBDIR)/$(LIBNAME)
++
++scrub:
++	@echo  Scrubing: $(LIBNAME) ...
++	-$(RMDIR) obj/
++	-$(RMDIR) lib/
++
++$(OBJS): | $(OBJDIR)
++
++$(LIBDIR) $(OBJDIR):
++	$(MKDIR) $@
++
++-include $(addprefix $(OBJDIR)/, $(DEPS))
+diff --git a/source/networking/enet/makefile.icssg.am64x.r5f.gcc-armv7 b/source/networking/enet/makefile.icssg.am64x.r5f.gcc-armv7
+new file mode 100644
+index 0000000..9ec9950
+--- /dev/null
++++ b/source/networking/enet/makefile.icssg.am64x.r5f.gcc-armv7
+@@ -0,0 +1,208 @@
++#
++# Auto generated makefile
++#
++
++export MCU_PLUS_SDK_PATH?=$(abspath ../../..)
++include $(MCU_PLUS_SDK_PATH)/imports.mak
++
++CC=arm-none-eabi-gcc
++AR=arm-none-eabi-ar
++
++PROFILE?=release
++ConfigName:=$(PROFILE)
++
++LIBNAME:=enet-lwip-icssg.am64x.r5f.gcc-armv7.$(PROFILE).lib
++
++FILES_common := \
++    enet.c \
++    enet_trace.c \
++    enet_utils.c \
++    enet_osal.c \
++    enet_queue.c \
++    enet_rm.c \
++    enet_osal_dflt.c \
++    enet_utils_dflt.c \
++    enet_phymdio_dflt.c \
++    mod_null.c \
++    mdio.c \
++    per_null.c \
++    enet_hostport.c \
++    enet_udma.c \
++    enet_udma_priv.c \
++    csl_mdio.c \
++    icssg.c \
++    icssg_utils.c \
++    icssg_timesync.c \
++    icssg_tas.c \
++    icssg_stats.c \
++    k3_soc.c \
++    enet_soc.c \
++    enetphy.c \
++    generic_phy.c \
++    dp83869.c \
++    dp83867.c \
++    enet_apputils.c \
++    enet_appmemutils.c \
++    enet_appethpatterns.c \
++    enet_appsoc.c \
++    enet_apprmcfg.c \
++    enet_udmautils.c \
++    enet_ioctlutils.c \
++    enet_apputils_k3.c \
++    enet_appboardutils.c \
++    enet_mcm.c \
++    lwip2enet.c \
++    lwip2lwipif.c \
++    lwipifcb.c \
++    default_netif.c \
++    pbufQ.c \
++
++FILES_PATH_common = \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/core \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/mod \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/per \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/per/V1 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/common \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/dma/udma \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5/priv \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3/am64x_am243x \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/V3 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/defcfg \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src/V1 \
++
++INCLUDES_common := \
++    -I${MCU_PLUS_SDK_PATH}/source \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/V3 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/core \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/phy \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/hw_include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm/include \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/FreeRTOS-Kernel/include \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am64x/r5f \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/inc \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/include \
++
++DEFINES_common := \
++    -DSOC_AM64X \
++    -DMAKEFILE_BUILD \
++    -DBUILD_MCU1_0 \
++    -DBUILD_MCU \
++    -DENET_CFG_ASSERT=1 \
++    -DENET_CFG_PRINT_ENABLE \
++    -DENET_CFG_TRACE_LEVEL=3 \
++    -DENET_ENABLE_PER_ICSSG=1 \
++    -Dam64x_am243x_evm \
++    -DENABLE_ENET_LOG \
++    -DLWIPIF_INSTRUMENTATION_ENABLED=1 \
++
++CFLAGS_common := \
++    -mcpu=cortex-r5 \
++    -mfloat-abi=hard \
++    -mfpu=vfpv3-d16 \
++    -mthumb \
++    -Wall \
++    -Werror \
++    -g \
++    -Wno-pointer-to-int-cast \
++    -Wno-gnu-variable-sized-type-not-at-end \
++    -Wno-unused-function \
++    -mno-unaligned-access \
++    -Wno-extra \
++    -falign-functions=2 \
++    -fno-strict-aliasing \
++    -ffunction-sections \
++    -fdata-sections \
++
++CFLAGS_release := \
++    -O2 \
++
++CFLAGS_cpp_common := \
++    -Wno-c99-designator \
++    -Wno-extern-c-compat \
++    -Wno-c++11-narrowing \
++    -Wno-reorder-init-list \
++    -Wno-deprecated-register \
++    -Wno-writable-strings \
++    -Wno-enum-compare \
++    -Wno-reserved-user-defined-literal \
++    -Wno-unused-const-variable \
++    -x c++ \
++
++CFLAGS_debug := \
++    -D_DEBUG_=1 \
++
++ARFLAGS_common := \
++    rc \
++
++FILES := $(FILES_common) $(FILES_$(PROFILE))
++ASMFILES := $(ASMFILES_common) $(ASMFILES_$(PROFILE))
++FILES_PATH := $(FILES_PATH_common) $(FILES_PATH_$(PROFILE))
++CFLAGS := $(CFLAGS_common) $(CFLAGS_$(PROFILE))
++ASMFLAGS := $(CFLAGS_common) $(CFLAGS_$(PROFILE))
++ifeq ($(CPLUSPLUS_BUILD), yes)
++CFLAGS += $(CFLAGS_cpp_common)
++endif
++DEFINES := $(DEFINES_common) $(DEFINES_$(PROFILE))
++INCLUDES := $(INCLUDES_common) $(INCLUDE_$(PROFILE))
++ARFLAGS := $(ARFLAGS_common) $(ARFLAGS_$(PROFILE))
++
++LIBDIR := lib
++OBJDIR := obj/am64x/ti-arm-clang/$(PROFILE)/r5f/enet-lwip-icssg/
++OBJS := $(FILES:%.c=%.obj)
++OBJS += $(ASMFILES:%.S=%.obj)
++DEPS := $(FILES:%.c=%.d)
++
++vpath %.obj $(OBJDIR)
++vpath %.c $(FILES_PATH)
++vpath %.S $(FILES_PATH)
++
++$(OBJDIR)/%.obj %.obj: %.c
++	@echo  Compiling: $(LIBNAME): $<
++	$(CC) -c $(CFLAGS) $(INCLUDES) $(DEFINES) -MMD -o $(OBJDIR)/$@ $<
++
++$(OBJDIR)/%.obj %.obj: %.S
++	@echo  Compiling: $(LIBNAME): $<
++	$(CC) -c $(ASMFLAGS) -o $(OBJDIR)/$@ $<
++
++all: $(LIBDIR)/$(LIBNAME)
++
++$(LIBDIR)/$(LIBNAME): $(OBJS) | $(LIBDIR)
++	@echo  .
++	@echo  Archiving: $(LIBNAME) to $@ ...
++	$(AR) $(ARFLAGS) $@ $(addprefix $(OBJDIR), $(OBJS))
++	@echo  Archiving: $(LIBNAME) Done !!!
++	@echo  .
++
++clean:
++	@echo  Cleaning: $(LIBNAME) ...
++	$(RMDIR) $(OBJDIR)
++	$(RM) $(LIBDIR)/$(LIBNAME)
++
++scrub:
++	@echo  Scrubing: $(LIBNAME) ...
++	-$(RMDIR) obj/
++	-$(RMDIR) lib/
++
++$(OBJS): | $(OBJDIR)
++
++$(LIBDIR) $(OBJDIR):
++	$(MKDIR) $@
++
++-include $(addprefix $(OBJDIR)/, $(DEPS))
+diff --git a/source/networking/enet/utils/enet_apputils.c b/source/networking/enet/utils/enet_apputils.c
+index 2e5fb90..b155f7f 100644
+--- a/source/networking/enet/utils/enet_apputils.c
++++ b/source/networking/enet/utils/enet_apputils.c
+@@ -191,7 +191,7 @@ int32_t EnetAppUtils_getNum(void)
+ #if defined(UART_ENABLED) && defined(ENETAPPUTILS_UART_ALLOWED)
+     UART_scanFmt("%d", &num);
+ #else
+-    scanf("%d", &num);
++    scanf("%ld", &num);
+ #endif
+ 
+     return num;
+@@ -204,7 +204,7 @@ uint32_t EnetAppUtils_getHex(void)
+ #if defined(UART_ENABLED) && defined(ENETAPPUTILS_UART_ALLOWED)
+     UART_scanFmt("%x", &num);
+ #else
+-    scanf("%x", &num);
++    scanf("%lx", &num);
+ #endif
+ 
+     return num;
+diff --git a/source/networking/enet/utils/enet_udmautils.c b/source/networking/enet/utils/enet_udmautils.c
+index 424df18..17a8995 100644
+--- a/source/networking/enet/utils/enet_udmautils.c
++++ b/source/networking/enet/utils/enet_udmautils.c
+@@ -102,19 +102,24 @@ void EnetAppUtils_freePktInfoQ(EnetDma_PktQ *pPktInfoQ)
+ uint64_t EnetAppUtils_virtToPhyFxn(const void *virtAddr,
+                                    void *appData)
+ {
++#if defined(__aarch64__)
+     return((uint64_t)virtAddr);
++#else
++    uintptr_t va = (uintptr_t)virtAddr;
++    return (uint64_t)va;
++#endif
+ }
+ 
+ void *EnetAppUtils_phyToVirtFxn(uint64_t phyAddr,
+                                 void *appData)
+ {
+ #if defined(__aarch64__)
+-    uint64_t temp = phyAddr;
++    uint64_t pa = phyAddr;
+ #else
+     /* R5 is 32-bit machine, need to truncate to avoid void * typecast error */
+-    uint32_t temp = (uint32_t)phyAddr;
++    uintptr_t pa = (uintptr_t)phyAddr;
+ #endif
+-    return((void *)temp);
++    return((void *)pa);
+ }
+ 
+ int32_t EnetAppUtils_allocRxFlow(Enet_Handle hEnet,
+diff --git a/source/networking/lwip/lwip-config/am64x/lwipopts.h b/source/networking/lwip/lwip-config/am64x/lwipopts.h
+index ea26834..12eb8b7 100644
+--- a/source/networking/lwip/lwip-config/am64x/lwipopts.h
++++ b/source/networking/lwip/lwip-config/am64x/lwipopts.h
+@@ -60,15 +60,15 @@ extern "C"
+ 
+ #define LWIP_NUM_NETIF_CLIENT_DATA (LWIP_MDNS_RESPONDER)
+ 
+-#define LWIP_HAVE_LOOPIF           1
+-#define LWIP_NETIF_LOOPBACK        1
++#define LWIP_HAVE_LOOPIF           0
++#define LWIP_NETIF_LOOPBACK        0
+ #define LWIP_LOOPBACK_MAX_PBUFS    10
+ 
+-#define TCP_LISTEN_BACKLOG         1
++#define TCP_LISTEN_BACKLOG         0
+ 
+-#define LWIP_COMPAT_SOCKETS        1
+-#define LWIP_SO_RCVTIMEO           1
+-#define LWIP_SO_RCVBUF             1
++#define LWIP_COMPAT_SOCKETS        0
++#define LWIP_SO_RCVTIMEO           0
++#define LWIP_SO_RCVBUF             0
+ 
+ #define LWIP_TCPIP_CORE_LOCKING    1
+ 
+@@ -187,7 +187,7 @@ a lot of data that needs to be copied, this should be set high. */
+ 
+ 
+ /* ---------- TCP options ---------- */
+-#define LWIP_TCP                1
++#define LWIP_TCP                0
+ #define TCP_TTL                 255
+ 
+ #define LWIP_ALTCP              (LWIP_TCP)
+@@ -247,15 +247,15 @@ a lot of data that needs to be copied, this should be set high. */
+ /* Define IP_FORWARD to 1 if you wish to have the ability to forward
+    IP packets across network interfaces. If you are going to run lwIP
+    on a device with only one network interface, define this to 0. */
+-#define IP_FORWARD              1
++#define IP_FORWARD              0
+ 
+ /* IP reassembly and segmentation.These are orthogonal even
+  * if they both deal with IP fragments */
+-#define IP_REASSEMBLY           1
++#define IP_REASSEMBLY           0
+ #define IP_REASS_MAX_PBUFS      (10 * ((1500 + PBUF_POOL_BUFSIZE - 1) / PBUF_POOL_BUFSIZE))
+ #define MEMP_NUM_REASSDATA      IP_REASS_MAX_PBUFS
+-#define IP_FRAG                 1
+-#define IPV6_FRAG_COPYHEADER    1
++#define IP_FRAG                 0
++#define IPV6_FRAG_COPYHEADER    0
+ 
+ /* ---------- ICMP options ---------- */
+ #define ICMP_TTL                255
+@@ -277,7 +277,7 @@ a lot of data that needs to be copied, this should be set high. */
+ 
+ 
+ /* ---------- UDP options ---------- */
+-#define LWIP_UDP                1
++#define LWIP_UDP                0
+ #define LWIP_UDPLITE            LWIP_UDP
+ #define UDP_TTL                 255
+ 
+@@ -330,16 +330,16 @@ a lot of data that needs to be copied, this should be set high. */
+  * we're limited by the command line length so you need to modify the settings
+  * in this file.
+  */
+-#define PPPOE_SUPPORT           1
+-#define PPPOS_SUPPORT           1
++#define PPPOE_SUPPORT           0
++#define PPPOS_SUPPORT           0
+ 
+-#define PAP_SUPPORT             1      /* Set > 0 for PAP. */
+-#define CHAP_SUPPORT            1      /* Set > 0 for CHAP. */
++#define PAP_SUPPORT             0      /* Set > 0 for PAP. */
++#define CHAP_SUPPORT            0      /* Set > 0 for CHAP. */
+ #define MSCHAP_SUPPORT          0      /* Set > 0 for MSCHAP */
+ #define CBCP_SUPPORT            0      /* Set > 0 for CBCP (NOT FUNCTIONAL!) */
+ #define CCP_SUPPORT             0      /* Set > 0 for CCP */
+-#define VJ_SUPPORT              1      /* Set > 0 for VJ header compression. */
+-#define MD5_SUPPORT             1      /* Set > 0 for MD5 (see also CHAP) */
++#define VJ_SUPPORT              0      /* Set > 0 for VJ header compression. */
++#define MD5_SUPPORT             0      /* Set > 0 for MD5 (see also CHAP) */
+ 
+ #endif /* PPP_SUPPORT */
+ 
+@@ -390,34 +390,6 @@ void sys_unlock_tcpip_core(void);
+ #define LWIP_FREERTOS_SYS_ARCH_PROTECT_SANITY_CHECK   1
+ #define LWIP_FREERTOS_CHECK_QUEUE_EMPTY_ON_FREE       1
+ 
+-/*---------------------------------------------------------------*/
+-#if defined(__ARM_ARCH) && (defined(__TI_EABI__) || defined(__clang__))
+-    /*------------------------------------------------------------------------*/
+-    /* Under EABI, use function to access errno since it likely has TLS in    */
+-    /* a thread-safe version of the RTS library.                              */
+-    /*------------------------------------------------------------------------*/
+-    extern volatile int *__aeabi_errno_addr(void);
+-    #define errno (* __aeabi_errno_addr())
+-#elif !defined(__C6X_MIGRATION__) && defined(__TMS320C6X__) && defined(__TI_EABI__)
+-    /*------------------------------------------------------------------------*/
+-    /* Under EABI, use function to access errno since it likely has TLS in    */
+-    /* a thread-safe version of the RTS library.                              */
+-    /*------------------------------------------------------------------------*/
+-    extern int *__c6xabi_errno_addr(void);
+-    __TI_TLS_DATA_DECL(int, __errno);
+-
+-    #define errno (* __c6xabi_errno_addr())
+-#else
+-    extern _DATA_ACCESS int errno;
+-    _TI_PROPRIETARY_PRAGMA("diag_push")
+-    /* errno is not allowed under MISRA, anyway */
+-    _TI_PROPRIETARY_PRAGMA("CHECK_MISRA(\"-5.6\")") /* duplicated name in another scope (errno) */
+-    _TI_PROPRIETARY_PRAGMA("CHECK_MISRA(\"-19.4\")") /* macro expands to parenthesized */
+-    #define errno errno
+-    _TI_PROPRIETARY_PRAGMA("diag_pop")
+-#endif
+-
+-
+ #ifdef __cplusplus
+ }
+ #endif
+diff --git a/source/networking/lwip/lwip-port/freertos/include/arch/cc.h b/source/networking/lwip/lwip-port/freertos/include/arch/cc.h
+index 434d566..dee2b68 100644
+--- a/source/networking/lwip/lwip-port/freertos/include/arch/cc.h
++++ b/source/networking/lwip/lwip-port/freertos/include/arch/cc.h
+@@ -47,7 +47,9 @@ extern "C"
+ #include <sys/select.h>
+ 
+ /* Define byte order of the system */
++#ifdef __clang__
+ #define BYTE_ORDER LITTLE_ENDIAN
++#endif
+ 
+ /* Use lwip provided errors as ti compiler is too granular*/
+ #define LWIP_PROVIDE_ERRNO  1
+diff --git a/source/networking/lwip/makefile.stack.am64x.r5f.gcc-armv7 b/source/networking/lwip/makefile.stack.am64x.r5f.gcc-armv7
+new file mode 100755
+index 0000000..89f8179
+--- /dev/null
++++ b/source/networking/lwip/makefile.stack.am64x.r5f.gcc-armv7
+@@ -0,0 +1,264 @@
++#
++# Auto generated makefile
++#
++
++export MCU_PLUS_SDK_PATH?=$(abspath ../../..)
++include $(MCU_PLUS_SDK_PATH)/imports.mak
++
++CC=arm-none-eabi-gcc
++AR=arm-none-eabi-ar
++
++PROFILE?=release
++ConfigName:=$(PROFILE)
++
++LIBNAME:=lwip-freertos.am64x.r5f.gcc-armv7.$(PROFILE).lib
++
++FILES_common := \
++    init.c \
++    def.c \
++    dns.c \
++    inet_chksum.c \
++    ip.c \
++    mem.c \
++    memp.c \
++    netif.c \
++    pbuf.c \
++    raw.c \
++    stats.c \
++    sys.c \
++    altcp.c \
++    altcp_alloc.c \
++    altcp_tcp.c \
++    tcp.c \
++    tcp_in.c \
++    tcp_out.c \
++    timeouts.c \
++    udp.c \
++    autoip.c \
++    dhcp.c \
++    etharp.c \
++    icmp.c \
++    igmp.c \
++    ip4_frag.c \
++    ip4.c \
++    ip4_addr.c \
++    dhcp6.c \
++    ethip6.c \
++    icmp6.c \
++    inet6.c \
++    ip6.c \
++    ip6_addr.c \
++    ip6_frag.c \
++    mld6.c \
++    nd6.c \
++    api_lib.c \
++    api_msg.c \
++    err.c \
++    if_api.c \
++    netbuf.c \
++    netdb.c \
++    netifapi.c \
++    sockets.c \
++    tcpip.c \
++    ethernet.c \
++    bridgeif.c \
++    bridgeif_fdb.c \
++    slipif.c \
++    lowpan6_common.c \
++    lowpan6.c \
++    lowpan6_ble.c \
++    zepif.c \
++    auth.c \
++    ccp.c \
++    chap-md5.c \
++    chap_ms.c \
++    chap-new.c \
++    demand.c \
++    eap.c \
++    ecp.c \
++    eui64.c \
++    fsm.c \
++    ipcp.c \
++    ipv6cp.c \
++    lcp.c \
++    magic.c \
++    mppe.c \
++    multilink.c \
++    ppp.c \
++    pppapi.c \
++    pppcrypt.c \
++    pppoe.c \
++    pppol2tp.c \
++    pppos.c \
++    upap.c \
++    utils.c \
++    vj.c \
++    arc4.c \
++    des.c \
++    md4.c \
++    md5.c \
++    sha1.c \
++    snmp_asn1.c \
++    snmp_core.c \
++    snmp_mib2.c \
++    snmp_mib2_icmp.c \
++    snmp_mib2_interfaces.c \
++    snmp_mib2_ip.c \
++    snmp_mib2_snmp.c \
++    snmp_mib2_system.c \
++    snmp_mib2_tcp.c \
++    snmp_mib2_udp.c \
++    snmp_snmpv2_framework.c \
++    snmp_snmpv2_usm.c \
++    snmp_msg.c \
++    snmpv3.c \
++    snmp_netconn.c \
++    snmp_pbuf_stream.c \
++    snmp_raw.c \
++    snmp_scalar.c \
++    snmp_table.c \
++    snmp_threadsync.c \
++    snmp_traps.c \
++    altcp_proxyconnect.c \
++    fs.c \
++    http_client.c \
++    httpd.c \
++     \
++    lwiperf.c \
++    smtp.c \
++    sntp.c \
++    mdns.c \
++    netbiosns.c \
++    tftp_server.c \
++    mqtt.c \
++    altcp_tls_mbedtls.c \
++    altcp_tls_mbedtls_mem.c \
++    snmpv3_mbedtls.c \
++    sys_arch.c \
++
++FILES_PATH_common = \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/smtp \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/tftp \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/mqtt \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/tftp \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/netbiosns \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/mdns \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/altcp_tls \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/http \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/http/makefsdata \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/lwiperf \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/snmp \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/apps/sntp \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/netif \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/netif/ppp \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/netif/ppp/polarssl \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/core \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/core/ipv6 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/core/ipv4 \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/api \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos \
++
++INCLUDES_common := \
++    -I${MCU_PLUS_SDK_PATH}/source \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/FreeRTOS-Kernel/include \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F \
++    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am64x/r5f \
++
++DEFINES_common := \
++    -DSOC_AM64X \
++
++CFLAGS_common := \
++    -mcpu=cortex-r5 \
++    -mfloat-abi=hard \
++    -mfpu=vfpv3-d16 \
++    -mthumb \
++    -Wall \
++    -Werror \
++    -g \
++    -Wno-gnu-variable-sized-type-not-at-end \
++    -Wno-unused-function \
++    -Wno-extra \
++    -mthumb \
++    -fno-strict-aliasing \
++    -ffunction-sections \
++    -fdata-sections \
++
++CFLAGS_release := \
++    -O2 \
++
++CFLAGS_cpp_common := \
++    -Wno-c99-designator \
++    -Wno-extern-c-compat \
++    -Wno-c++11-narrowing \
++    -Wno-reorder-init-list \
++    -Wno-deprecated-register \
++    -Wno-writable-strings \
++    -Wno-enum-compare \
++    -Wno-reserved-user-defined-literal \
++    -Wno-unused-const-variable \
++    -x c++ \
++
++CFLAGS_debug := \
++    -D_DEBUG_=1 \
++
++ARFLAGS_common := \
++    rc \
++
++FILES := $(FILES_common) $(FILES_$(PROFILE))
++ASMFILES := $(ASMFILES_common) $(ASMFILES_$(PROFILE))
++FILES_PATH := $(FILES_PATH_common) $(FILES_PATH_$(PROFILE))
++CFLAGS := $(CFLAGS_common) $(CFLAGS_$(PROFILE))
++ASMFLAGS := $(CFLAGS_common) $(CFLAGS_$(PROFILE))
++ifeq ($(CPLUSPLUS_BUILD), yes)
++CFLAGS += $(CFLAGS_cpp_common)
++endif
++DEFINES := $(DEFINES_common) $(DEFINES_$(PROFILE))
++INCLUDES := $(INCLUDES_common) $(INCLUDE_$(PROFILE))
++ARFLAGS := $(ARFLAGS_common) $(ARFLAGS_$(PROFILE))
++
++LIBDIR := lib
++OBJDIR := obj/am64x/gcc/$(PROFILE)/r5f/lwip-freertos/
++OBJS := $(FILES:%.c=%.obj)
++OBJS += $(ASMFILES:%.S=%.obj)
++DEPS := $(FILES:%.c=%.d)
++
++vpath %.obj $(OBJDIR)
++vpath %.c $(FILES_PATH)
++vpath %.S $(FILES_PATH)
++
++$(OBJDIR)/%.obj %.obj: %.c
++	@echo  Compiling: $(LIBNAME): $<
++	$(CC) -c $(CFLAGS) $(INCLUDES) $(DEFINES) -MMD -o $(OBJDIR)/$@ $<
++
++$(OBJDIR)/%.obj %.obj: %.S
++	@echo  Compiling: $(LIBNAME): $<
++	$(CC) -c $(ASMFLAGS) -o $(OBJDIR)/$@ $<
++
++all: $(LIBDIR)/$(LIBNAME)
++
++$(LIBDIR)/$(LIBNAME): $(OBJS) | $(LIBDIR)
++	@echo  .
++	@echo  Archiving: $(LIBNAME) to $@ ...
++	$(AR) $(ARFLAGS) $@ $(addprefix $(OBJDIR), $(OBJS))
++	@echo  Archiving: $(LIBNAME) Done !!!
++	@echo  .
++
++clean:
++	@echo  Cleaning: $(LIBNAME) ...
++	$(RMDIR) $(OBJDIR)
++	$(RM) $(LIBDIR)/$(LIBNAME)
++
++scrub:
++	@echo  Scrubing: $(LIBNAME) ...
++	-$(RMDIR) obj/
++	-$(RMDIR) lib/
++
++$(OBJS): | $(OBJDIR)
++
++$(LIBDIR) $(OBJDIR):
++	$(MKDIR) $@
++
++-include $(addprefix $(OBJDIR)/, $(DEPS))

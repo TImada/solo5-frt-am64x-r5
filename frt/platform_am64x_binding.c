@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Takayuki Imada <takayuki.imada@gmail.com>
+ * Copyright (c) 2022-2023 Takayuki Imada <takayuki.imada@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software
  * for any purpose with or without fee is hereby granted, provided
@@ -23,6 +23,12 @@
 #define _GNU_SOURCE
 
 #include "DebugP.h"
+#include "FreeRTOS.h"
+#include "lwip2enet.h"
+#include "lwip/netif.h"
+#include "platform_tender.h" /* Obtain MAX_NETDEV */
+
+extern struct netif solo5_netif[MAX_NETDEV];
 
 /* Initialization */
 /* CPU initialization */
@@ -52,6 +58,24 @@ void platform_block_init(void)
 /* Network device initialization */
 void platform_net_init(void)
 {
+    unsigned int i;
+    struct netif *netif;
+    Lwip2Enet_Handle hLwip2Enet;
+
+    /* Wait until each target network port becomes ready */
+    for (i = 0U; i < MAX_NETDEV; i++) {
+        netif = &solo5_netif[i];
+        if (netif == NULL) {
+            continue;
+        }
+        hLwip2Enet = (Lwip2Enet_Handle)netif->state;
+
+        while (hLwip2Enet->linkIsUp == false) {
+            vTaskDelay(100 / portTICK_PERIOD_MS);
+        }
+    }
+
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     return;
 }
 

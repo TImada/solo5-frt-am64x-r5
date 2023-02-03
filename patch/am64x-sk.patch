@@ -1,0 +1,28 @@
+--- am64x-evm/example.syscfg	2023-02-13 21:56:09.654493778 +0900
++++ am64x-sk/example.syscfg	2023-02-13 21:59:16.257708388 +0900
+@@ -97,6 +97,7 @@
+ enet_cpsw1.phyAddr1              = 0;
+ enet_cpsw1.phyAddr2              = 0;
+ enet_cpsw1.phyToMacInterfaceMode = "RGMII";
++enet_cpsw1.RGMII.RX_CTL.$assign  = "ball.V13";
+ enet_cpsw1.PktPoolEnable         = false;
+ enet_cpsw1.McmEnable             = true;
+ 
+@@ -109,12 +110,11 @@
+ debug_log.uartLog.UART.RXD.$suggestSolution = "ball.D15";
+ debug_log.uartLog.UART.TXD.$suggestSolution = "ball.C16";
+ enet_cpsw1.RGMII.$suggestSolution           = "RGMII1";
+-enet_cpsw1.RGMII.RD0.$suggestSolution       = "ball.W5";
+-enet_cpsw1.RGMII.RD1.$suggestSolution       = "ball.Y5";
+-enet_cpsw1.RGMII.RD2.$suggestSolution       = "ball.V6";
+-enet_cpsw1.RGMII.RD3.$suggestSolution       = "ball.V5";
+-enet_cpsw1.RGMII.RX_CTL.$suggestSolution    = "ball.W6";
+-enet_cpsw1.RGMII.RXC.$suggestSolution       = "ball.AA5";
++enet_cpsw1.RGMII.RD0.$suggestSolution       = "ball.AA13";
++enet_cpsw1.RGMII.RD1.$suggestSolution       = "ball.U12";
++enet_cpsw1.RGMII.RD2.$suggestSolution       = "ball.Y13";
++enet_cpsw1.RGMII.RD3.$suggestSolution       = "ball.V12";
++enet_cpsw1.RGMII.RXC.$suggestSolution       = "ball.W13";
+ enet_cpsw1.RGMII.TD0.$suggestSolution       = "ball.V15";
+ enet_cpsw1.RGMII.TD1.$suggestSolution       = "ball.V14";
+ enet_cpsw1.RGMII.TD2.$suggestSolution       = "ball.W14";

@@ -38,8 +38,7 @@ MCU_PATH ?= $(HOME)/ti/$(MCU_SDK_VER)
 # Common flags for object compiling (binding and tender)
 DEFINES_common := \
 	-DSOC_AM64X \
-    -DENET_ENABLE_PER_ICSSG=1 \
-    -D__$(CPU_ARCH)__
+    -DENET_ENABLE_PER_CPSW=1 \
 
 CFLAGS_common := \
 	-march=$(MARCH) \
@@ -71,7 +70,11 @@ CPPFLAGS_SOC := -I$(CONFIG_PLATFORM_DIR)/include \
                 -I$(MCU_PATH)/source/kernel/dpl \
                 -I$(MCU_PATH)/source/kernel/freertos/FreeRTOS-Kernel/include \
                 -I$(MCU_PATH)/source/kernel/freertos/dpl/common \
-                -I$(MCU_PATH)/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F
+                -I$(MCU_PATH)/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F \
+                -I$(MCU_PATH)/source/networking/enet/core/lwipif/inc \
+                -I$(MCU_PATH)/source/networking/lwip/lwip-config/am64x  \
+                -I$(MCU_PATH)/source/networking/lwip/lwip-port/freertos/include \
+                -I$(MCU_PATH)/source/networking/lwip/lwip-stack/src/include 
 HOSTCPPFLAGS_SOC := $(CPPFLAGS_SOC)
 
 ### (Required) Linker file path with its absolute path
@@ -93,12 +96,11 @@ LIBS := \
 	-l:freertos.am64x.r5f.gcc-armv7.${ConfigName}.lib \
 	-l:drivers.am64x.r5f.gcc-armv7.${ConfigName}.lib \
 	-l:board.am64x.r5f.gcc-armv7.${ConfigName}.lib \
-    -l:enet-lwip-icssg.am64x.r5f.ti-arm-clang.${ConfigName}.lib \
-    -l:lwip-freertos.am64x.r5f.ti-arm-clang.${ConfigName}.lib \
-    -l:lwip-contrib.am64x.r5f.ti-arm-clang.${ConfigName}.lib
+    -l:enet-lwip-cpsw.am64x.r5f.gcc-armv7.${ConfigName}.lib \
+    -l:lwip-freertos.am64x.r5f.gcc-armv7.${ConfigName}.lib
 
 ### (Required) Link flags for the linker
 LD_LFLAGS :=
 
 ### (Required) Link flags for the compiler
-CC_LFLAGS :=
+CC_LFLAGS := -z muldefs

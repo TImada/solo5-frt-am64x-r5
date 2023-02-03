@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Takayuki Imada <takayuki.imada@gmail.com>
+ * Copyright (c) 2022-2023 Takayuki Imada <takayuki.imada@gmail.com>
  *
  * Permission to use, copy, modify, and/or distribute this software
  * for any purpose with or without fee is hereby granted, provided
@@ -19,14 +19,27 @@
 #define _GNU_SOURCE
 
 #include "DebugP.h"
+#include "lwip2lwipif.h"
+
+/* Base task priority for MirageOS related tasks */
+#define MIRAGE_BASE_PRI (14)
 
 /* Macros for the console */
 #define PLATFORM_PRINTF DebugP_log
 #define PLATFORM_PERROR PLATFORM_PRINTF
 
+/* Macros for networking */
+#define LWIP_INPUT_TASK
+#define LWIP_NETIF_INIT LWIPIF_LWIP_init /* AM64x ENET initialization handler */
+
+/* Supported number of each I/O device type */
+#define MAX_NETDEV (1U) /* Currently support only one network device */
+
 /* Initialization */
-/* Early platform initialization */
-void early_platform_init(void);
+/* Early platform initialization before FreeRTOS becomes ready */
+void early_platform_init_1(void);
+/* Early platform initialization after FreeRTOS became ready */
+void early_platform_init_2(void);
 
 /* Timer */
 /* Get the timer count */

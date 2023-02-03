@@ -7,7 +7,7 @@ fi
 
 DESTDIR=${prefix}/solo5-frt-am64x-r5
 mkdir -p ${DESTDIR}
-mkdir ${DESTDIR}/include ${DESTDIR}/lib
+mkdir ${DESTDIR}/include ${DESTDIR}/lib ${DESTDIR}/patch
 
 # Copy the SoC specific Makefile
 cp Makefile.soc ${DESTDIR}
@@ -19,4 +19,7 @@ cp solo5_frt.lds ${DESTDIR}
 cp FreeRTOSConfig.h platform_*.h generated/*.h ${DESTDIR}/include
 
 # Copy the library file
-cp -r libsoc.a ${DESTDIR}/lib
+cp libsoc.a ${DESTDIR}/lib
+
+# Copy the patch file for the AM64x MCU SDK (It needs to be applied manually)
+cp patch/am64x_08_03_00_18.patch ${DESTDIR}/patch

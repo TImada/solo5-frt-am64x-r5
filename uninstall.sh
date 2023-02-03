@@ -9,3 +9,4 @@ DESTDIR=${prefix}/solo5-frt-am64x-r5
 
 # Remove the target directory
 rm -rf ${DESTDIR}
+
