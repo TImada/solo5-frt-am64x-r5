@@ -22,4 +22,4 @@ cp FreeRTOSConfig.h platform_*.h generated/*.h ${DESTDIR}/include
 cp libsoc.a ${DESTDIR}/lib
 
 # Copy the patch file for the AM64x MCU SDK (It needs to be applied manually)
-cp patch/am64x_08_03_00_18.patch ${DESTDIR}/patch
+cp patch/am64x_08_05_00_24.patch ${DESTDIR}/patch

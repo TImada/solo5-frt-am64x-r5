@@ -15,11 +15,11 @@ URL: https://www.ti.com/tool/TMDS64GPEVM
 
 ### Install SDKs for AM64x
 
-You need to install AM64x MCU+ SDK 08.03.00.18 and sysconfig-1.12.1_2446 on your Linux PC.
+You need to install AM64x MCU+ SDK 08.05.00.24 and sysconfig-1.14.0_2667 on your Linux PC.
 
-URL: https://www.ti.com/tool/download/MCU-PLUS-SDK-AM64X/08.03.00.18
+URL: https://www.ti.com/tool/download/MCU-PLUS-SDK-AM64X/08.05.00.24
 
-You can find both installers named `mcu_plus_sdk_am64x_08_03_00_18-linux-x64-installer.run` and `sysconfig-1.12.1_2446-setup.run` there.
+You can find both installers named `mcu_plus_sdk_am64x_08_05_00_24-linux-x64-installer.run` and `sysconfig-1.14.0_2667-setup.run` there.
 
 <u>Note that only x86_64 platforms are supported.</u>
 
@@ -42,7 +42,7 @@ error: FP registers might be clobbered despite 'interrupt' attribute: compile wi
 
 ### GCC path setting
 
-Change the default GCC path (CGT_GCC_ARM_PATH) in /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18/imports.mak.  
+Change the default GCC path (CGT_GCC_ARM_PATH) in /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24/imports.mak.  
 ```
 ...
 #        CGT_GCC_ARM_PATH=$(TOOLS_PATH)/gcc-arm-none-eabi-7-2017-q4-major
@@ -53,8 +53,8 @@ Change the default GCC path (CGT_GCC_ARM_PATH) in /path/to/ti/mcu_plus_sdk_am64x
 ### Set variables on your bash
 
 ```bash
-$ export MCU_SDK_TOP=/path/to/ti/mcu_plus_sdk_am64x_08_03_00_18
-$ export SYSCFG_TOP=/path/to/ti/sysconfig_1.12.1
+$ export MCU_SDK_TOP=/path/to/ti/mcu_plus_sdk_am64x_08_05_00_24
+$ export SYSCFG_TOP=/path/to/ti/sysconfig_1.14.0
 ```
 
 If your board type is SK-AM64 Evaluation board, export `AM64X_SK` as "true".
@@ -69,7 +69,7 @@ This step must be done to create a pinmux configuration file required for Solo5 
 Build a sample for the AM64x GP EVM board type even if you use your SK-AM64 board.
 
 ```bash
-$ cd /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18/examples/networking/lwip/enet_lwip_cpsw/am64x-evm/r5fss0-0_freertos/ti-arm-clang
+$ cd /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24/examples/networking/lwip/enet_lwip_cpsw/am64x-evm/r5fss0-0_freertos/ti-arm-clang
 $ make
 ```
 
@@ -77,44 +77,46 @@ $ make
 
 ```bash
 (Apply a patch for the AM64x MCU SDK)
-$ cd /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18
-$ wget https://raw.githubusercontent.com/TImada/solo5-frt-am64x-r5/main/patch/am64x_08_03_00_18.patch
-$ patch -p1 < ./am64x_08_03_00_18.patch
+$ cd /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24
+$ wget https://raw.githubusercontent.com/TImada/solo5-frt-am64x-r5/main/patch/am64x_08_05_00_24.patch
+$ patch -p1 < ./am64x_08_05_00_24.patch
 ```
 
 ```bash
 (FreeRTOS library)
-$ cd /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18/source/kernel/freertos
+$ cd /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24/source/kernel/freertos
 $ make -f makefile.am64x.r5f.gcc-armv7 clean
 $ make -f makefile.am64x.r5f.gcc-armv7
 ```
 
 ```bash
 (driver library)
-$ cd /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18/source/drivers
+$ cd /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24/source/drivers
 $ make -f makefile.am64x.r5f.gcc-armv7 clean
 $ make -f makefile.am64x.r5f.gcc-armv7
 ```
 
 ```bash
 (board library)
-$ cd /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18/source/board
+$ cd /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24/source/board
 $ make -f makefile.am64x.r5f.gcc-armv7 clean
 $ make -f makefile.am64x.r5f.gcc-armv7
 ```
 
 ```bash
 (LWIP library)
-$ cd /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18/source/networking/lwip
-$ make -f makefile.stack.am64x.r5f.gcc-armv7 clean
-$ make -f makefile.stack.am64x.r5f.gcc-armv7
+$ cd /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24/source/networking/lwip
+$ make -f makefile.stack_freertos.am64x.r5f.gcc-armv7 clean
+$ make -f makefile.stack_freertos.am64x.r5f.gcc-armv7
 ```
 
 ```bash
-(ENET CPSW dirver library)
-$ cd /path/to/ti/mcu_plus_sdk_am64x_08_03_00_18/source/networking/enet
+(ENET CPSW dirver libraries)
+$ cd /path/to/ti/mcu_plus_sdk_am64x_08_05_00_24/source/networking/enet
 $ make -f makefile.cpsw.am64x.r5f.gcc-armv7 clean
 $ make -f makefile.cpsw.am64x.r5f.gcc-armv7
+$ make -f makefile.lwipif-cpsw-freertos.am64x.r5f.gcc-armv7 clean
+$ make -f makefile.lwipif-cpsw-freertos.am64x.r5f.gcc-armv7
 ```
 
 ## Register a repository for MCUs with opam
@@ -154,4 +156,4 @@ $ make
 
 ### System configuration by syscfg
 
-This package uses `mirageos.syscfg` for system configuration to enable UART0 and ICSSG.
+This package uses a modified `example.syscfg` for system configuration to enable UART0 and CPSW.

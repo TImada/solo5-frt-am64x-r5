@@ -24,6 +24,7 @@
 
 #include "DebugP.h"
 #include "FreeRTOS.h"
+#include "task.h"
 #include "lwip2enet.h"
 #include "lwip/netif.h"
 #include "platform_tender.h" /* Obtain MAX_NETDEV */
@@ -62,6 +63,11 @@ void platform_net_init(void)
     struct netif *netif;
     Lwip2Enet_Handle hLwip2Enet;
 
+    /* Create tasks for LWIP on AM64x */
+    netif = &solo5_netif[0];
+    assert(netif);
+    LwipifEnetApp_startSchedule(netif);
+
     /* Wait until each target network port becomes ready */
     for (i = 0U; i < MAX_NETDEV; i++) {
         netif = &solo5_netif[i];
@@ -75,7 +81,7 @@ void platform_net_init(void)
         }
     }
 
-    vTaskDelay(500 / portTICK_PERIOD_MS);
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     return;
 }
 

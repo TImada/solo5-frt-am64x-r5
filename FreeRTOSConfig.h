@@ -58,7 +58,7 @@
 #define configOPTIMIZE_FOR_LATENCY              (0)
 
 #define configUSE_PREEMPTION					(1)
-#define configUSE_PORT_OPTIMISED_TASK_SELECTION	(1)
+#define configUSE_PORT_OPTIMISED_TASK_SELECTION	(0)
 #define configUSE_TICKLESS_IDLE                 (0)
 #define configUSE_IDLE_HOOK                     (1)  /* when 1, make sure to implement void vApplicationIdleHook(void) as the hook function */
 #define configUSE_MALLOC_FAILED_HOOK            (0)
@@ -114,7 +114,7 @@
                                                      */
 #define configSUPPORT_DYNAMIC_ALLOCATION        (1)
 #define configTOTAL_HEAP_SIZE                   (4*1024) /* not used when heap_3.c is the selected heap */
-#define configAPPLICATION_ALLOCATED_HEAP        (0)
+#define configAPPLICATION_ALLOCATED_HEAP        (1)
 
 /* run-time stats config */
 #if (configOPTIMIZE_FOR_LATENCY==0)

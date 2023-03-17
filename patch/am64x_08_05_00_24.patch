@@ -1,17 +1,17 @@
 diff --git a/examples/networking/lwip/enet_lwip_cpsw/test_enet.c b/examples/networking/lwip/enet_lwip_cpsw/test_enet.c
-index 9494d77..93b49fb 100644
+index 432784b9..5facd1df 100644
 --- a/examples/networking/lwip/enet_lwip_cpsw/test_enet.c
 +++ b/examples/networking/lwip/enet_lwip_cpsw/test_enet.c
-@@ -58,7 +58,7 @@ extern void Board_TxRxDelaySet(const EnetBoard_PhyCfg *boardPhyCfg);
- extern uint32_t Board_getEthBoardId(void);
- extern uint32_t Board_getEthType(void);
+@@ -54,7 +54,7 @@
+ #include "test_enet_extphy.h"
+ #endif
  
 -static void EnetApp_addMCastEntry(Enet_Type enetType,
 +void EnetApp_addMCastEntry(Enet_Type enetType,
                                    uint32_t instId,
                                    uint32_t coreId,
                                    const uint8_t *testMCastAddr,
-@@ -259,7 +259,7 @@ int enet_lwip_example(void *args)
+@@ -275,7 +275,7 @@ int enet_lwip_example(void *args)
      return 0;
  }
  
@@ -20,11 +20,28 @@ index 9494d77..93b49fb 100644
                                    uint32_t instId,
                                    uint32_t coreId,
                                    const uint8_t *testMCastAddr,
-diff --git a/source/drivers/uart/v2/uart.h b/source/drivers/uart/v2/uart.h
-index 2ad788f..064745e 100644
---- a/source/drivers/uart/v2/uart.h
-+++ b/source/drivers/uart/v2/uart.h
-@@ -1386,6 +1386,7 @@ static inline uint32_t UART_readLineStatus(uint32_t baseAddr)
+diff --git a/source/drivers/makefile.am64x.r5f.gcc-armv7 b/source/drivers/makefile.am64x.r5f.gcc-armv7
+index 90c5fcf9..e6764027 100644
+--- a/source/drivers/makefile.am64x.r5f.gcc-armv7
++++ b/source/drivers/makefile.am64x.r5f.gcc-armv7
+@@ -5,10 +5,8 @@
+ export MCU_PLUS_SDK_PATH?=$(abspath ../..)
+ include $(MCU_PLUS_SDK_PATH)/imports.mak
+ 
+-CG_TOOL_ROOT=$(CGT_GCC_ARMV7_PATH)
+-
+-CC=$(CGT_GCC_ARMV7_PATH)/bin/arm-none-eabi-gcc
+-AR=$(CGT_GCC_ARMV7_PATH)/bin/arm-none-eabi-gcc-ar
++CC=arm-none-eabi-gcc
++AR=arm-none-eabi-gcc-ar
+ 
+ PROFILE?=release
+ ConfigName:=$(PROFILE)
+diff --git a/source/drivers/uart/v0/uart.h b/source/drivers/uart/v0/uart.h
+index 40ccfafa..5cbbc3d7 100644
+--- a/source/drivers/uart/v0/uart.h
++++ b/source/drivers/uart/v0/uart.h
+@@ -1385,6 +1385,7 @@ static inline uint32_t UART_readLineStatus(uint32_t baseAddr)
  
  static inline uint8_t UART_getCharFifo(uint32_t baseAddr, uint8_t *readBuf)
  {
@@ -33,7 +50,7 @@ index 2ad788f..064745e 100644
      uint32_t          waitCount = UART_ERROR_COUNT;
      uint32_t          errorVal;
 diff --git a/source/drivers/udma/udma_utils.c b/source/drivers/udma/udma_utils.c
-index 5b31c3d..b4e91a8 100755
+index 5b31c3d9..7b4d90bb 100755
 --- a/source/drivers/udma/udma_utils.c
 +++ b/source/drivers/udma/udma_utils.c
 @@ -247,7 +247,13 @@ uint64_t Udma_defaultVirtToPhyFxn(const void *virtAddr,
@@ -43,15 +60,41 @@ index 5b31c3d..b4e91a8 100755
 +#if defined (__aarch64__)
      return ((uint64_t) virtAddr);
 +#else
-+    /* R5 is 32-bit machine. This is a workaround to avoid incorrect cast by GCC */
++    /* R5 is 32-bit machine. This is a workaround to avoid incorrect cast      by GCC */
 +    uintptr_t va = (uintptr_t)virtAddr;
 +    return (uint64_t)va;
 +#endif
  }
  
  void *Udma_defaultPhyToVirtFxn(uint64_t phyAddr,
+diff --git a/source/kernel/freertos/FreeRTOS-Kernel/tasks.c b/source/kernel/freertos/FreeRTOS-Kernel/tasks.c
+index baaf4f69..41a80523 100644
+--- a/source/kernel/freertos/FreeRTOS-Kernel/tasks.c
++++ b/source/kernel/freertos/FreeRTOS-Kernel/tasks.c
+@@ -3422,6 +3422,8 @@ void vTaskMissedYield( void )
+  */
+ static portTASK_FUNCTION( prvIdleTask, pvParameters )
+ {
++    portTASK_USES_FLOATING_POINT();
++
+     /* Stop warnings. */
+     ( void ) pvParameters;
+ 
+diff --git a/source/kernel/freertos/FreeRTOS-Kernel/timers.c b/source/kernel/freertos/FreeRTOS-Kernel/timers.c
+index eb422969..4d62c331 100644
+--- a/source/kernel/freertos/FreeRTOS-Kernel/timers.c
++++ b/source/kernel/freertos/FreeRTOS-Kernel/timers.c
+@@ -550,6 +550,8 @@
+ 
+     static portTASK_FUNCTION( prvTimerTask, pvParameters )
+     {
++        portTASK_USES_FLOATING_POINT();
++
+         TickType_t xNextExpireTime;
+         BaseType_t xListWasEmpty;
+ 
 diff --git a/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h b/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h
-index f860fa7..27b5089 100644
+index fb675f1d..872b92a3 100644
 --- a/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h
 +++ b/source/kernel/freertos/config/am64x/r5f/FreeRTOSConfig.h
 @@ -99,7 +99,7 @@ extern "C"
@@ -73,10 +116,23 @@ index f860fa7..27b5089 100644
  /* run-time stats config */
  #if (configOPTIMIZE_FOR_LATENCY==0)
 diff --git a/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7 b/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7
-index fe17057..96eb383 100644
+index fe17057f..02001b08 100644
 --- a/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7
 +++ b/source/kernel/freertos/makefile.am64x.r5f.gcc-armv7
-@@ -47,7 +47,7 @@ FILES_common := \
+@@ -5,10 +5,8 @@
+ export MCU_PLUS_SDK_PATH?=$(abspath ../../..)
+ include $(MCU_PLUS_SDK_PATH)/imports.mak
+ 
+-CG_TOOL_ROOT=$(CGT_GCC_ARMV7_PATH)
+-
+-CC=$(CGT_GCC_ARMV7_PATH)/bin/arm-none-eabi-gcc
+-AR=$(CGT_GCC_ARMV7_PATH)/bin/arm-none-eabi-gcc-ar
++CC=arm-none-eabi-gcc
++AR=arm-none-eabi-gcc-ar
+ 
+ PROFILE?=release
+ ConfigName:=$(PROFILE)
+@@ -47,7 +45,7 @@ FILES_common := \
      timers.c \
      queue.c \
      list.c \
@@ -85,115 +141,206 @@ index fe17057..96eb383 100644
      FreeRTOS_POSIX_clock.c \
      FreeRTOS_POSIX_mqueue.c \
      FreeRTOS_POSIX_pthread_barrier.c \
-diff --git a/source/networking/enet/core/src/common/enet_utils_dflt.c b/source/networking/enet/core/src/common/enet_utils_dflt.c
-index 977b543..bd31fc2 100644
---- a/source/networking/enet/core/src/common/enet_utils_dflt.c
-+++ b/source/networking/enet/core/src/common/enet_utils_dflt.c
-@@ -109,7 +109,12 @@ static void EnetUtilsDflt_print(const char *fmt, ...)
- static uint64_t EnetUtilsDflt_virtToPhysDflt(const void *virtAddr,
-                                              void *appData)
- {
-+#if defined(__aarch64__)
-     return ((uint64_t)virtAddr);
-+#else
-+    uintptr_t va = (uintptr_t)virtAddr;
-+    return (uint64_t)va;
-+#endif
- }
+@@ -102,10 +100,8 @@ CFLAGS_common := \
+     -Wall \
+     -Werror \
+     -g \
+-    -Wno-gnu-variable-sized-type-not-at-end \
+     -Wno-unused-function \
+     -Wno-int-to-pointer-cast \
+-    -Wno-pointer-to-int-cast \
+     -Wno-unused-but-set-variable \
+     -fdata-sections \
+     -ffunction-sections \
+diff --git a/source/networking/.meta/enet_cpsw/templates/am64x_am243x/enet_soc_cfg.c.xdt b/source/networking/.meta/enet_cpsw/templates/am64x_am243x/enet_soc_cfg.c.xdt
+index cb91daa9..38f239cd 100644
+--- a/source/networking/.meta/enet_cpsw/templates/am64x_am243x/enet_soc_cfg.c.xdt
++++ b/source/networking/.meta/enet_cpsw/templates/am64x_am243x/enet_soc_cfg.c.xdt
+@@ -776,7 +776,7 @@ static EnetRm_ResPrms gEnetAppRmDefCfg_3G =
+             .coreId        = `module.getCpuID()`,
+             .numTxCh       = ENET_SYSCFG_TX_CHANNELS_NUM,    /* numTxCh */
+             .numRxFlows    = (ENET_SYSCFG_RX_FLOWS_NUM + 1),    /* numRxFlows. Need one additional flow for reserved flow  */
+-            .numMacAddress = 4U,    /* numMacAddress */
++            .numMacAddress = 2U,    /* numMacAddress */
+         },
+     },
+     .numCores = 1U,
+@@ -832,4 +832,4 @@ const EnetRm_IoctlPermissionTable *EnetAppRm_getIoctlPermissionInfo(Enet_Type en
+     }
  
- static void *EnetUtilsDflt_physToVirtDflt(uint64_t phyAddr,
+     return(ioctlPerm);
+-}
+\ No newline at end of file
++}
+diff --git a/source/networking/.meta/enet_cpsw/templates/enet_lwipif.c.xdt b/source/networking/.meta/enet_cpsw/templates/enet_lwipif.c.xdt
+index b3cdfce2..1f2094d1 100644
+--- a/source/networking/.meta/enet_cpsw/templates/enet_lwipif.c.xdt
++++ b/source/networking/.meta/enet_cpsw/templates/enet_lwipif.c.xdt
+@@ -40,6 +40,8 @@
+ 
+ #include <lwip2lwipif.h>
+ 
++#include "portmacro.h"
++
+ /* ========================================================================== */
+ /*                           Macros & Typedefs                                */
+ /* ========================================================================== */
+@@ -530,6 +532,8 @@ static void LwipifEnetApp_postTxPktEvent(void* pArg)
+ %if(instance.RtosVariant == "FreeRTOS"){
+ static err_t LwipifEnetApp_createPollTask(struct netif *netif)
+ {
++    portTASK_USES_FLOATING_POINT();
++
+     TaskP_Params params;
+     int32_t status;
+     ClockP_Params clkPrms;
+@@ -714,6 +718,8 @@ void LwipifEnetApp_createTxPktHandlerTask(struct netif *netif)
+ 
+ static void LwipifEnetApp_rxPacketTask(void *arg)
+ {
++    portTASK_USES_FLOATING_POINT();
++
+     struct netif *netif = (struct netif *) arg;
+     while (!shutDownFlag)
+     {
+@@ -734,6 +740,8 @@ static void LwipifEnetApp_rxPacketTask(void *arg)
+ 
+ static void LwipifEnetApp_txPacketTask(void *arg)
+ {
++    portTASK_USES_FLOATING_POINT();
++
+     struct netif *netif = (struct netif *) arg;
+     while (!shutDownFlag)
+     {
+@@ -773,4 +781,4 @@ static void LwipifEnetApp_postPollLink(ClockP_Object *clkObj, void *arg)
+         SemaphoreP_post(hpollSem);
+     }
+ }
+-%}
+\ No newline at end of file
++%}
 diff --git a/source/networking/enet/core/src/core/enet_utils.c b/source/networking/enet/core/src/core/enet_utils.c
-index 4d9d993..473f96f 100644
+index fb37ba12..954613f8 100644
 --- a/source/networking/enet/core/src/core/enet_utils.c
 +++ b/source/networking/enet/core/src/core/enet_utils.c
-@@ -212,7 +212,13 @@ void *EnetUtils_physToVirt(uint64_t physAddr,
- static uint64_t EnetUtils_virtToPhysDflt(const void *virtAddr,
-                                          void *appData)
- {
-+#if defined (__aartch64__)
-     return ((uint64_t)virtAddr);
-+#else
-+    /* R5 is 32-bit machine. This is a workaround to avoid incorrect cast b    y GCC */
-+    uintptr_t va = (uintptr_t)virtAddr;
-+    return (uint64_t)va;
-+#endif
- }
+@@ -56,7 +56,11 @@
+ /*                           Macros & Typedefs                                */
+ /* ========================================================================== */
  
- static void *EnetUtils_physToVirtDflt(uint64_t phyAddr,
++#ifdef __GNUC__
++#define __NOP  asm("nop")
++#else
+ #define __NOP  __nop()
++#endif
+ 
+ #define NOP5   do { __NOP; __NOP; __NOP; __NOP; __NOP; } while (0)
+ 
 diff --git a/source/networking/enet/core/src/dma/udma/enet_udma_priv.c b/source/networking/enet/core/src/dma/udma/enet_udma_priv.c
-index 8d59741..96c78b1 100644
+index ec0d5496..36655d83 100644
 --- a/source/networking/enet/core/src/dma/udma/enet_udma_priv.c
 +++ b/source/networking/enet/core/src/dma/udma/enet_udma_priv.c
-@@ -433,6 +433,9 @@ int32_t EnetUdma_submitPkts(EnetPer_Handle hPer,
-     uint32_t ringWrIdx = 0U, ringMemEleCnt = 0U;
-     uint32_t tosIndex, i;
+@@ -357,6 +357,10 @@ int32_t EnetUdma_submitPkts(EnetPer_Handle hPer,
      uint8_t dscpIPv4En, tosVal;
+     uint32_t totalPacketFilledLen = 0;
+     EnetUdma_SGListEntry *sgList;
 +#ifdef __arm__
++    uintptr_t descptr;
 +    uintptr_t bufptr;
 +#endif
  
      isExposedRing = (Udma_ringGetMode(hUdmaRing) == TISCI_MSG_VALUE_RM_RING_MODE_RING);
  #if defined(SOC_AM64X) || defined(SOC_AM243X)
-@@ -468,10 +471,19 @@ int32_t EnetUdma_submitPkts(EnetPer_Handle hPer,
-                                     (uint32_t)ENET_PKTSTATE_DMA_NOT_WITH_HW,
-                                     (uint32_t)ENET_PKTSTATE_DMA_WITH_HW);
- 
+@@ -396,9 +400,19 @@ int32_t EnetUdma_submitPkts(EnetPer_Handle hPer,
+                 {
+                     pHDesc = &pDmaDesc->hostBufDesc[i - ENET_UDMA_CPSW_HOSTBUFDESC_INDEX].desc;
+                     /* Link the Descs */
 +#ifdef __arm__
-+            bufptr = (uintptr_t)dmaPkt->bufPtr;
-+            CSL_udmapCppi5SetBufferAddr(pHostDesc, (uint64_t)bufptr);
++                    descptr = (uintptr_t)pHDesc;
++                    CSL_udmapCppi5LinkDesc(pHDescPrev, (uint64_t) descptr);
 +#else
-             CSL_udmapCppi5SetBufferAddr(pHostDesc, (uint64_t)dmaPkt->bufPtr);
+                     CSL_udmapCppi5LinkDesc(pHDescPrev, (uint64_t) pHDesc);
 +#endif
-             CSL_udmapCppi5SetBufferLen(pHostDesc, dmaPkt->userBufLen);
- 
+                 }
 +#ifdef __arm__
-+            CSL_udmapCppi5SetOrgBufferAddr(pHostDesc, (uint64_t)bufptr);
++                bufptr = (uintptr_t)sgList[i].bufPtr;
++                CSL_udmapCppi5SetBufferAddr(pHDesc, (uint64_t)bufptr);
 +#else
-             CSL_udmapCppi5SetOrgBufferAddr(pHostDesc, (uint64_t)dmaPkt->bufPtr);
+                 CSL_udmapCppi5SetBufferAddr(pHDesc, (uint64_t) sgList[i].bufPtr);
 +#endif
-             CSL_udmapCppi5SetOrgBufferLen(pHostDesc, dmaPkt->orgBufLen);
- 
-             CSL_udmapCppi5SetPktLen(pHostDesc,CSL_UDMAP_CPPI5_PD_DESCINFO_DTYPE_VAL_HOST, dmaPkt->userBufLen);
-@@ -1477,10 +1489,17 @@ int32_t EnetUdma_ringDequeue(Udma_RingHandle hUdmaRing,
- 
-             *pDmaDesc = pVirtDmaDesc;
- 
+                 if (ENET_UDMA_DIR_TX == transferDir)
+                 {
+                     CSL_udmapCppi5SetBufferLen(pHDesc, sgList[i].segmentFilledLen);
+@@ -407,7 +421,11 @@ int32_t EnetUdma_submitPkts(EnetPer_Handle hPer,
+                 {
+                     CSL_udmapCppi5SetBufferLen(pHDesc, sgList[i].segmentAllocLen);
+                 }
 +#ifdef __arm__
-+            pHpdDesc->hostDesc.bufPtr =
-+                (uintptr_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.bufPtr, NULL);
-+            pHpdDesc->hostDesc.orgBufPtr =
-+                (uintptr_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.orgBufPtr, NULL);
++                CSL_udmapCppi5SetOrgBufferAddr(pHDesc, (uint64_t)bufptr);
 +#else
-             pHpdDesc->hostDesc.bufPtr =
-                 (uint64_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.bufPtr, NULL);
-             pHpdDesc->hostDesc.orgBufPtr =
-                 (uint64_t)EnetUtils_physToVirt(pHpdDesc->hostDesc.orgBufPtr, NULL);
+                 CSL_udmapCppi5SetOrgBufferAddr(pHDesc, (uint64_t) sgList[i].bufPtr);
++#endif
+                 CSL_udmapCppi5SetOrgBufferLen(pHDesc, sgList[i].segmentAllocLen);
+                 totalPacketFilledLen += sgList[i].segmentFilledLen;
+                 pHDescPrev = pHDesc;
+@@ -1400,6 +1418,9 @@ int32_t EnetUdma_ringDequeue(Udma_RingHandle hUdmaRing,
+     CSL_UdmapCppi5HMPD *pDescEntry;
+     CSL_UdmapCppi5HMPD *pNextDescEntryVirt;
+     EnetUdma_DmaDesc *pVirtDmaDesc;
++#ifdef __arm__
++    uintptr_t ptr;
 +#endif
  
-             /* Debug point -> The Cortex A cores can do speculative reads which
-              * can mandate to do cache_invalidate before packets are received.
-@@ -1682,9 +1701,14 @@ void EnetUdma_buffDescInit(EnetUdma_CpswHpdDesc *hpdDesc)
+     if ((pDmaDesc != NULL) && (hUdmaRing != NULL))
+     {
+@@ -1441,8 +1462,13 @@ int32_t EnetUdma_ringDequeue(Udma_RingHandle hUdmaRing,
+             pDescEntry = &pVirtDmaDesc->hpdDesc.hostDesc;
+             while (pDescEntry != NULL)
+             {
++#ifdef __arm__
++                pDescEntry->bufPtr = (uintptr_t) EnetUtils_physToVirt(pDescEntry->bufPtr, NULL);
++                pDescEntry->orgBufPtr = (uintptr_t) EnetUtils_physToVirt(pDescEntry->orgBufPtr, NULL);
++#else
+                 pDescEntry->bufPtr = (uint64_t) EnetUtils_physToVirt(pDescEntry->bufPtr, NULL);
+                 pDescEntry->orgBufPtr = (uint64_t) EnetUtils_physToVirt(pDescEntry->orgBufPtr, NULL);
++#endif
+                 if (pDescEntry->nextDescPtr != 0ULL)
+                 {
+                     pNextDescEntryVirt = (CSL_UdmapCppi5HMPD*) EnetUtils_physToVirt(pDescEntry->nextDescPtr, NULL);
+@@ -1451,7 +1477,12 @@ int32_t EnetUdma_ringDequeue(Udma_RingHandle hUdmaRing,
+                 }
+                 else
+                 {
++#ifdef __arm__
++                    ptr = (uint32_t)pDescEntry->nextDescPtr & 0xFFFFFFFFU;
++                    pDescEntry = (CSL_UdmapCppi5HMPD*) ptr;
++#else
+                     pDescEntry = (CSL_UdmapCppi5HMPD*) pDescEntry->nextDescPtr;
++#endif
+                 }
+             }
+ 
+@@ -1655,9 +1686,14 @@ void EnetUdma_buffDescInit(EnetUdma_CpswHpdDesc *hpdDesc)
      CSL_udmapCppi5SetSrcTag(hostDesc, 0x0000U);
      CSL_udmapCppi5SetDstTag(hostDesc, 0x0000U);
      CSL_udmapCppi5LinkDesc(hostDesc, 0U);
--    CSL_udmapCppi5SetBufferAddr(hostDesc, (uint64_t)NULL);
-     CSL_udmapCppi5SetBufferLen(hostDesc, 0U);
 +#ifdef __arm__
 +    CSL_udmapCppi5SetBufferAddr(hostDesc, (uint64_t)0ULL);
 +    CSL_udmapCppi5SetOrgBufferAddr(hostDesc, (uint64_t)0ULL);
 +#else
-+    CSL_udmapCppi5SetBufferAddr(hostDesc, (uint64_t)NULL);
+     CSL_udmapCppi5SetBufferAddr(hostDesc, (uint64_t)NULL);
+-    CSL_udmapCppi5SetBufferLen(hostDesc, 0U);
      CSL_udmapCppi5SetOrgBufferAddr(hostDesc, (uint64_t)NULL);
 +#endif
++    CSL_udmapCppi5SetBufferLen(hostDesc, 0U);
      CSL_udmapCppi5SetOrgBufferLen(hostDesc, 0U);
  }
  
 diff --git a/source/networking/enet/makefile.cpsw.am64x.r5f.gcc-armv7 b/source/networking/enet/makefile.cpsw.am64x.r5f.gcc-armv7
 new file mode 100644
-index 0000000..311f97b
+index 00000000..7fe07a9b
 --- /dev/null
 +++ b/source/networking/enet/makefile.cpsw.am64x.r5f.gcc-armv7
-@@ -0,0 +1,222 @@
+@@ -0,0 +1,229 @@
 +#
 +# Auto generated makefile
 +#
@@ -207,7 +354,7 @@ index 0000000..311f97b
 +PROFILE?=release
 +ConfigName:=$(PROFILE)
 +
-+LIBNAME:=enet-lwip-cpsw.am64x.r5f.gcc-armv7.$(PROFILE).lib
++LIBNAME:=enet-cpsw.am64x.r5f.gcc-armv7.$(PROFILE).lib
 +
 +FILES_common := \
 +    enet.c \
@@ -216,20 +363,46 @@ index 0000000..311f97b
 +    enet_osal.c \
 +    enet_queue.c \
 +    enet_rm.c \
++    enet_rm_ioctl.c \
++    enet_rm_ioctl_register.c \
 +    enet_osal_dflt.c \
 +    enet_utils_dflt.c \
 +    enet_phymdio_dflt.c \
++    enet_phymdio_dflt_ioctl.c \
++    enet_phymdio_dflt_ioctl_register.c \
 +    mod_null.c \
 +    mdio.c \
++    mdio_manual_ioctl.c \
++    mdio_ioctl.c \
++    mdio_ioctl_register.c \
 +    cpsw_macport.c \
++    cpsw_macport_ioctl.c \
++    cpsw_macport_ioctl_register.c \
 +    cpsw_macport_intervlan.c \
++    cpsw_macport_intervlan_ioctl.c \
++    cpsw_macport_intervlan_ioctl_register.c \
++    cpsw_macport_est.c \
++    cpsw_macport_est_ioctl.c \
 +    cpsw_hostport.c \
++    cpsw_hostport_ioctl.c \
++    cpsw_hostport_ioctl_register.c \
 +    cpsw_ale.c \
++    cpsw_ale_ioctl.c \
++    cpsw_ale_ioctl_register.c \
 +    cpsw_stats.c \
++    cpsw_stats_ioctl.c \
++    cpsw_stats_ioctl_register.c \
 +    cpsw_cpts.c \
++    cpsw_cpts_ioctl.c \
++    cpsw_cpts_ioctl_register.c \
 +    per_null.c \
 +    cpsw_intervlan.c \
 +    cpsw.c \
++    cpsw_ioctl.c \
++    cpsw_ioctl_register.c \
++    cpsw_est.c \
++    cpsw_est_ioctl.c \
++    cpsw_est_ioctl_register.c \
 +    enet_hostport.c \
 +    enet_udma.c \
 +    enet_udma_priv.c \
@@ -240,7 +413,6 @@ index 0000000..311f97b
 +    csl_cpts.c \
 +    csl_mdio.c \
 +    k3_soc.c \
-+    enet_soc.c \
 +    enetphy.c \
 +    generic_phy.c \
 +    dp83869.c \
@@ -248,18 +420,9 @@ index 0000000..311f97b
 +    enet_apputils.c \
 +    enet_appmemutils.c \
 +    enet_appethpatterns.c \
-+    enet_appsoc.c \
-+    enet_apprmcfg.c \
 +    enet_udmautils.c \
 +    enet_ioctlutils.c \
 +    enet_apputils_k3.c \
-+    enet_appboardutils.c \
-+    enet_mcm.c \
-+    lwip2enet.c \
-+    lwip2lwipif.c \
-+    lwipifcb.c \
-+    default_netif.c \
-+    pbufQ.c \
 +
 +FILES_PATH_common = \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/core \
@@ -271,8 +434,8 @@ index 0000000..311f97b
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/emac/V5/priv \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5/V5_0/priv \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5/priv \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpts/V0/priv \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5/priv \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpts \
++    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3 \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3/am64x_am243x \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
@@ -281,8 +444,6 @@ index 0000000..311f97b
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/defcfg \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src/V1 \
 +
 +INCLUDES_common := \
 +    -I${MCU_PLUS_SDK_PATH}/source \
@@ -294,34 +455,30 @@ index 0000000..311f97b
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/core \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/phy \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/hw_include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/emac/V5 \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5 \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpsw/V5/V5_0 \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpts/V0 \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5 \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/cpts \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3/am64x_am243x \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm/include \
-+    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/FreeRTOS-Kernel/include \
-+    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F \
-+    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am64x/r5f \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/inc \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos/include \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/include \
 +
 +DEFINES_common := \
 +    -DSOC_AM64X \
 +    -DMAKEFILE_BUILD \
-+    -DBUILD_MCU1_0 \
-+    -DBUILD_MCU \
 +    -DENET_CFG_ASSERT=1 \
 +    -DENET_CFG_PRINT_ENABLE \
 +    -DENET_CFG_TRACE_LEVEL=3 \
 +    -DENET_ENABLE_PER_CPSW=1 \
-+    -Dam64x_am243x_evm \
 +    -DENABLE_ENET_LOG \
++
++DEFINES_debug := \
++    -DENET_CFG_DEV_ERROR=1 \
++    -DLWIPIF_INSTRUMENTATION_ENABLED=1 \
++    -DENETDMA_INSTRUMENTATION_ENABLED=1 \
 +
 +CFLAGS_common := \
 +    -mcpu=cortex-r5 \
@@ -332,13 +489,13 @@ index 0000000..311f97b
 +    -Werror \
 +    -g \
 +    -Wno-enum-compare \
-+    -Wno-gnu-variable-sized-type-not-at-end \
 +    -Wno-unused-function \
-+    -mno-unaligned-access \
 +    -Wno-extra \
-+    -falign-functions=2 \
 +    -ffunction-sections \
 +    -fdata-sections \
++
++CFLAGS_release := \
++    -O2 \
 +
 +CFLAGS_cpp_common := \
 +    -Wno-c99-designator \
@@ -354,9 +511,6 @@ index 0000000..311f97b
 +
 +CFLAGS_debug := \
 +    -D_DEBUG_=1 \
-+
-+CFLAGS_release := \
-+    -O2 \
 +
 +ARFLAGS_common := \
 +    rc \
@@ -374,7 +528,7 @@ index 0000000..311f97b
 +ARFLAGS := $(ARFLAGS_common) $(ARFLAGS_$(PROFILE))
 +
 +LIBDIR := lib
-+OBJDIR := obj/am64x/ti-arm-clang/$(PROFILE)/r5f/enet-lwip-cpsw/
++OBJDIR := obj/am64x/gcc-armv7/$(PROFILE)/r5f/enet-cpsw/
 +OBJS := $(FILES:%.c=%.obj)
 +OBJS += $(ASMFILES:%.S=%.obj)
 +DEPS := $(FILES:%.c=%.d)
@@ -416,12 +570,12 @@ index 0000000..311f97b
 +	$(MKDIR) $@
 +
 +-include $(addprefix $(OBJDIR)/, $(DEPS))
-diff --git a/source/networking/enet/makefile.icssg.am64x.r5f.gcc-armv7 b/source/networking/enet/makefile.icssg.am64x.r5f.gcc-armv7
+diff --git a/source/networking/enet/makefile.lwipif-cpsw-freertos.am64x.r5f.gcc-armv7 b/source/networking/enet/makefile.lwipif-cpsw-freertos.am64x.r5f.gcc-armv7
 new file mode 100644
-index 0000000..9ec9950
+index 00000000..6ad872c9
 --- /dev/null
-+++ b/source/networking/enet/makefile.icssg.am64x.r5f.gcc-armv7
-@@ -0,0 +1,208 @@
++++ b/source/networking/enet/makefile.lwipif-cpsw-freertos.am64x.r5f.gcc-armv7
+@@ -0,0 +1,143 @@
 +#
 +# Auto generated makefile
 +#
@@ -435,106 +589,46 @@ index 0000000..9ec9950
 +PROFILE?=release
 +ConfigName:=$(PROFILE)
 +
-+LIBNAME:=enet-lwip-icssg.am64x.r5f.gcc-armv7.$(PROFILE).lib
++LIBNAME:=lwipif-cpsw-freertos.am64x.r5f.gcc-armv7.$(PROFILE).lib
 +
 +FILES_common := \
-+    enet.c \
-+    enet_trace.c \
-+    enet_utils.c \
-+    enet_osal.c \
-+    enet_queue.c \
-+    enet_rm.c \
-+    enet_osal_dflt.c \
-+    enet_utils_dflt.c \
-+    enet_phymdio_dflt.c \
-+    mod_null.c \
-+    mdio.c \
-+    per_null.c \
-+    enet_hostport.c \
-+    enet_udma.c \
-+    enet_udma_priv.c \
-+    csl_mdio.c \
-+    icssg.c \
-+    icssg_utils.c \
-+    icssg_timesync.c \
-+    icssg_tas.c \
-+    icssg_stats.c \
-+    k3_soc.c \
-+    enet_soc.c \
-+    enetphy.c \
-+    generic_phy.c \
-+    dp83869.c \
-+    dp83867.c \
-+    enet_apputils.c \
-+    enet_appmemutils.c \
-+    enet_appethpatterns.c \
-+    enet_appsoc.c \
-+    enet_apprmcfg.c \
-+    enet_udmautils.c \
-+    enet_ioctlutils.c \
-+    enet_apputils_k3.c \
-+    enet_appboardutils.c \
-+    enet_mcm.c \
 +    lwip2enet.c \
 +    lwip2lwipif.c \
-+    lwipifcb.c \
-+    default_netif.c \
 +    pbufQ.c \
 +
 +FILES_PATH_common = \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/core \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/mod \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/per \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/per/V1 \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/common \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/dma/udma \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5/priv \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3 \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3/am64x_am243x \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/V3 \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/defcfg \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/src/V1 \
 +
 +INCLUDES_common := \
++    -I${CG_TOOL_ROOT}/include/c \
 +    -I${MCU_PLUS_SDK_PATH}/source \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/include \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/utils/V3 \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/core \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/include/phy \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/src/phy \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/hw_include \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/hw_include/mdio/V5 \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/board/src/am64x_am243x_evm/include \
-+    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/FreeRTOS-Kernel/include \
-+    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F \
-+    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am64x/r5f \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/core/lwipif/inc \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/include \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos/include \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/enet/soc/k3/am64x_am243x \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
 +
 +DEFINES_common := \
 +    -DSOC_AM64X \
 +    -DMAKEFILE_BUILD \
-+    -DBUILD_MCU1_0 \
-+    -DBUILD_MCU \
 +    -DENET_CFG_ASSERT=1 \
 +    -DENET_CFG_PRINT_ENABLE \
 +    -DENET_CFG_TRACE_LEVEL=3 \
-+    -DENET_ENABLE_PER_ICSSG=1 \
-+    -Dam64x_am243x_evm \
++    -DENET_ENABLE_PER_CPSW=1 \
 +    -DENABLE_ENET_LOG \
++
++DEFINES_debug := \
++    -DENET_CFG_DEV_ERROR=1 \
 +    -DLWIPIF_INSTRUMENTATION_ENABLED=1 \
++    -DENETDMA_INSTRUMENTATION_ENABLED=1 \
 +
 +CFLAGS_common := \
 +    -mcpu=cortex-r5 \
@@ -544,13 +638,8 @@ index 0000000..9ec9950
 +    -Wall \
 +    -Werror \
 +    -g \
-+    -Wno-pointer-to-int-cast \
-+    -Wno-gnu-variable-sized-type-not-at-end \
 +    -Wno-unused-function \
-+    -mno-unaligned-access \
 +    -Wno-extra \
-+    -falign-functions=2 \
-+    -fno-strict-aliasing \
 +    -ffunction-sections \
 +    -fdata-sections \
 +
@@ -588,7 +677,7 @@ index 0000000..9ec9950
 +ARFLAGS := $(ARFLAGS_common) $(ARFLAGS_$(PROFILE))
 +
 +LIBDIR := lib
-+OBJDIR := obj/am64x/ti-arm-clang/$(PROFILE)/r5f/enet-lwip-icssg/
++OBJDIR := obj/am64x/gcc-armv7/$(PROFILE)/r5f/lwipif-cpsw-freertos/
 +OBJS := $(FILES:%.c=%.obj)
 +OBJS += $(ASMFILES:%.S=%.obj)
 +DEPS := $(FILES:%.c=%.d)
@@ -630,72 +719,73 @@ index 0000000..9ec9950
 +	$(MKDIR) $@
 +
 +-include $(addprefix $(OBJDIR)/, $(DEPS))
+diff --git a/source/networking/enet/utils/V3/enet_mcm.c b/source/networking/enet/utils/V3/enet_mcm.c
+index 1227a8c7..61e06696 100644
+--- a/source/networking/enet/utils/V3/enet_mcm.c
++++ b/source/networking/enet/utils/V3/enet_mcm.c
+@@ -276,6 +276,8 @@ static void EnetMcm_evtCb(Enet_Event evt,
+ 
+ static void EnetMcm_asyncIoctlTask(void * arg)
+ {
++    portTASK_USES_FLOATING_POINT();
++
+     EnetMcm_Handle hMcm = (EnetMcm_Handle)arg;
+     SemaphoreP_Object * asyncIoctlSem = &hMcm->asyncIoctlSemObj;
+ 
+@@ -571,6 +573,8 @@ static void EnetMcm_timerCb(ClockP_Object *clkInst, void * arg)
+ 
+ static void EnetMcm_periodicTick(void * mcmHandle)
+ {
++    portTASK_USES_FLOATING_POINT();
++
+     SemaphoreP_Object * timerSem;
+     EnetMcm_Handle hMcm       = (EnetMcm_Handle)mcmHandle;
+ 
+@@ -794,6 +798,8 @@ static int32_t EnetMcm_ioctlHandler(EnetMcm_Handle hMcm,
+ 
+ static void EnetMcm_serverTask(void * McmHandle)
+ {
++    portTASK_USES_FLOATING_POINT();
++
+     volatile bool isShutdownMcm = false;
+     EnetMcm_Handle hMcm         = (EnetMcm_Handle)McmHandle;
+ 
 diff --git a/source/networking/enet/utils/enet_apputils.c b/source/networking/enet/utils/enet_apputils.c
-index 2e5fb90..b155f7f 100644
+index c4245434..15222fdb 100644
 --- a/source/networking/enet/utils/enet_apputils.c
 +++ b/source/networking/enet/utils/enet_apputils.c
-@@ -191,7 +191,7 @@ int32_t EnetAppUtils_getNum(void)
+@@ -194,8 +194,12 @@ int32_t EnetAppUtils_getNum(void)
+ 
  #if defined(UART_ENABLED) && defined(ENETAPPUTILS_UART_ALLOWED)
      UART_scanFmt("%d", &num);
- #else
--    scanf("%d", &num);
++#else
++#ifdef __arm__
 +    scanf("%ld", &num);
+ #else
+     scanf("%d", &num);
++#endif
  #endif
  
      return num;
-@@ -204,7 +204,7 @@ uint32_t EnetAppUtils_getHex(void)
+@@ -207,8 +211,12 @@ uint32_t EnetAppUtils_getHex(void)
+ 
  #if defined(UART_ENABLED) && defined(ENETAPPUTILS_UART_ALLOWED)
      UART_scanFmt("%x", &num);
- #else
--    scanf("%x", &num);
++#else
++#ifdef __arm__
 +    scanf("%lx", &num);
+ #else
+     scanf("%x", &num);
++#endif
  #endif
  
      return num;
-diff --git a/source/networking/enet/utils/enet_udmautils.c b/source/networking/enet/utils/enet_udmautils.c
-index 424df18..17a8995 100644
---- a/source/networking/enet/utils/enet_udmautils.c
-+++ b/source/networking/enet/utils/enet_udmautils.c
-@@ -102,19 +102,24 @@ void EnetAppUtils_freePktInfoQ(EnetDma_PktQ *pPktInfoQ)
- uint64_t EnetAppUtils_virtToPhyFxn(const void *virtAddr,
-                                    void *appData)
- {
-+#if defined(__aarch64__)
-     return((uint64_t)virtAddr);
-+#else
-+    uintptr_t va = (uintptr_t)virtAddr;
-+    return (uint64_t)va;
-+#endif
- }
- 
- void *EnetAppUtils_phyToVirtFxn(uint64_t phyAddr,
-                                 void *appData)
- {
- #if defined(__aarch64__)
--    uint64_t temp = phyAddr;
-+    uint64_t pa = phyAddr;
- #else
-     /* R5 is 32-bit machine, need to truncate to avoid void * typecast error */
--    uint32_t temp = (uint32_t)phyAddr;
-+    uintptr_t pa = (uintptr_t)phyAddr;
- #endif
--    return((void *)temp);
-+    return((void *)pa);
- }
- 
- int32_t EnetAppUtils_allocRxFlow(Enet_Handle hEnet,
 diff --git a/source/networking/lwip/lwip-config/am64x/lwipopts.h b/source/networking/lwip/lwip-config/am64x/lwipopts.h
-index ea26834..12eb8b7 100644
+index 812cf86e..b27d1839 100644
 --- a/source/networking/lwip/lwip-config/am64x/lwipopts.h
 +++ b/source/networking/lwip/lwip-config/am64x/lwipopts.h
-@@ -60,15 +60,15 @@ extern "C"
- 
- #define LWIP_NUM_NETIF_CLIENT_DATA (LWIP_MDNS_RESPONDER)
- 
--#define LWIP_HAVE_LOOPIF           1
--#define LWIP_NETIF_LOOPBACK        1
-+#define LWIP_HAVE_LOOPIF           0
-+#define LWIP_NETIF_LOOPBACK        0
+@@ -94,11 +94,11 @@ extern "C"
+ #define LWIP_HAVE_LOOPIF           (LWIP_NETIF_LOOPBACK && !LWIP_SINGLE_NETIF)
  #define LWIP_LOOPBACK_MAX_PBUFS    10
  
 -#define TCP_LISTEN_BACKLOG         1
@@ -710,7 +800,7 @@ index ea26834..12eb8b7 100644
  
  #define LWIP_TCPIP_CORE_LOCKING    1
  
-@@ -187,7 +187,7 @@ a lot of data that needs to be copied, this should be set high. */
+@@ -218,7 +218,7 @@ a lot of data that needs to be copied, this should be set high. */
  
  
  /* ---------- TCP options ---------- */
@@ -719,7 +809,7 @@ index ea26834..12eb8b7 100644
  #define TCP_TTL                 255
  
  #define LWIP_ALTCP              (LWIP_TCP)
-@@ -247,15 +247,15 @@ a lot of data that needs to be copied, this should be set high. */
+@@ -278,15 +278,15 @@ a lot of data that needs to be copied, this should be set high. */
  /* Define IP_FORWARD to 1 if you wish to have the ability to forward
     IP packets across network interfaces. If you are going to run lwIP
     on a device with only one network interface, define this to 0. */
@@ -739,7 +829,7 @@ index ea26834..12eb8b7 100644
  
  /* ---------- ICMP options ---------- */
  #define ICMP_TTL                255
-@@ -277,7 +277,7 @@ a lot of data that needs to be copied, this should be set high. */
+@@ -308,7 +308,7 @@ a lot of data that needs to be copied, this should be set high. */
  
  
  /* ---------- UDP options ---------- */
@@ -748,7 +838,7 @@ index ea26834..12eb8b7 100644
  #define LWIP_UDPLITE            LWIP_UDP
  #define UDP_TTL                 255
  
-@@ -330,16 +330,16 @@ a lot of data that needs to be copied, this should be set high. */
+@@ -361,16 +361,16 @@ a lot of data that needs to be copied, this should be set high. */
   * we're limited by the command line length so you need to modify the settings
   * in this file.
   */
@@ -771,10 +861,11 @@ index ea26834..12eb8b7 100644
  
  #endif /* PPP_SUPPORT */
  
-@@ -390,34 +390,6 @@ void sys_unlock_tcpip_core(void);
- #define LWIP_FREERTOS_SYS_ARCH_PROTECT_SANITY_CHECK   1
- #define LWIP_FREERTOS_CHECK_QUEUE_EMPTY_ON_FREE       1
+@@ -401,35 +401,6 @@ a lot of data that needs to be copied, this should be set high. */
  
+ #define DEFAULT_ACCEPTMBOX_SIZE         (TCPIP_MBOX_SIZE)
+ 
+-
 -/*---------------------------------------------------------------*/
 -#if defined(__ARM_ARCH) && (defined(__TI_EABI__) || defined(__clang__))
 -    /*------------------------------------------------------------------------*/
@@ -806,26 +897,26 @@ index ea26834..12eb8b7 100644
  #ifdef __cplusplus
  }
  #endif
-diff --git a/source/networking/lwip/lwip-port/freertos/include/arch/cc.h b/source/networking/lwip/lwip-port/freertos/include/arch/cc.h
-index 434d566..dee2b68 100644
---- a/source/networking/lwip/lwip-port/freertos/include/arch/cc.h
-+++ b/source/networking/lwip/lwip-port/freertos/include/arch/cc.h
-@@ -47,7 +47,9 @@ extern "C"
+diff --git a/source/networking/lwip/lwip-port/include/arch/cc.h b/source/networking/lwip/lwip-port/include/arch/cc.h
+index eaee1219..fdf8d257 100644
+--- a/source/networking/lwip/lwip-port/include/arch/cc.h
++++ b/source/networking/lwip/lwip-port/include/arch/cc.h
+@@ -48,7 +48,9 @@ extern "C"
  #include <sys/select.h>
  
  /* Define byte order of the system */
-+#ifdef __clang__
++#ifndef __GNUC__
  #define BYTE_ORDER LITTLE_ENDIAN
 +#endif
  
  /* Use lwip provided errors as ti compiler is too granular*/
  #define LWIP_PROVIDE_ERRNO  1
-diff --git a/source/networking/lwip/makefile.stack.am64x.r5f.gcc-armv7 b/source/networking/lwip/makefile.stack.am64x.r5f.gcc-armv7
-new file mode 100755
-index 0000000..89f8179
+diff --git a/source/networking/lwip/makefile.stack_freertos.am64x.r5f.gcc-armv7 b/source/networking/lwip/makefile.stack_freertos.am64x.r5f.gcc-armv7
+new file mode 100644
+index 00000000..4fd1fd66
 --- /dev/null
-+++ b/source/networking/lwip/makefile.stack.am64x.r5f.gcc-armv7
-@@ -0,0 +1,264 @@
++++ b/source/networking/lwip/makefile.stack_freertos.am64x.r5f.gcc-armv7
+@@ -0,0 +1,265 @@
 +#
 +# Auto generated makefile
 +#
@@ -984,15 +1075,16 @@ index 0000000..89f8179
 +    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/core/ipv6 \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/core/ipv4 \
 +    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/api \
-+    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos \
++    ${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos/src \
 +
 +INCLUDES_common := \
 +    -I${MCU_PLUS_SDK_PATH}/source \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-stack/src/include \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/include \
 +    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-port/freertos/include \
-+    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
 +    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/FreeRTOS-Kernel/include \
 +    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/portable/TI_ARM_CLANG/ARM_CR5F \
++    -I${MCU_PLUS_SDK_PATH}/source/networking/lwip/lwip-config/am64x \
 +    -I${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am64x/r5f \
 +
 +DEFINES_common := \
@@ -1048,7 +1140,7 @@ index 0000000..89f8179
 +ARFLAGS := $(ARFLAGS_common) $(ARFLAGS_$(PROFILE))
 +
 +LIBDIR := lib
-+OBJDIR := obj/am64x/gcc/$(PROFILE)/r5f/lwip-freertos/
++OBJDIR := obj/am64x/gcc-armv7/$(PROFILE)/r5f/lwip-freertos/
 +OBJS := $(FILES:%.c=%.obj)
 +OBJS += $(ASMFILES:%.S=%.obj)
 +DEPS := $(FILES:%.c=%.d)

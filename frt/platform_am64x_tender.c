@@ -42,7 +42,6 @@
 #include "lwip/sys.h"
 #include "lwip/tcpip.h"
 
-extern void Board_cpswMuxSel(void);
 extern void EnetApp_addMCastEntry(Enet_Type enetType,
                                   uint32_t instId,
                                   uint32_t coreId,
@@ -72,8 +71,6 @@ void early_platform_init_2(void)
 
     Drivers_open();
     Board_driversOpen();
-
-    Board_cpswMuxSel();
 
     EnetApp_getEnetInstInfo(&enetType, &instId);
     EnetAppUtils_enableClocks(enetType, instId);

@@ -1,28 +1,74 @@
---- am64x-evm/example.syscfg	2023-02-13 21:56:09.654493778 +0900
-+++ am64x-sk/example.syscfg	2023-02-13 21:59:16.257708388 +0900
-@@ -97,6 +97,7 @@
- enet_cpsw1.phyAddr1              = 0;
- enet_cpsw1.phyAddr2              = 0;
- enet_cpsw1.phyToMacInterfaceMode = "RGMII";
-+enet_cpsw1.RGMII.RX_CTL.$assign  = "ball.V13";
- enet_cpsw1.PktPoolEnable         = false;
- enet_cpsw1.McmEnable             = true;
+diff -ru am64x-evm-lwip/example.syscfg am64x-sk-lwip/example.syscfg
+--- am64x-evm-lwip/example.syscfg	2023-03-27 21:32:16.013776968 +0900
++++ am64x-sk-lwip/example.syscfg	2023-03-27 21:37:19.006274740 +0900
+@@ -32,7 +32,8 @@
+ /**
+  * Write custom configuration values to the imported modules.
+  */
+-eeprom1.$name = "CONFIG_EEPROM0";
++eeprom1.$name      = "CONFIG_EEPROM0";
++eeprom1.i2cAddress = 0x51;
  
-@@ -109,12 +110,11 @@
- debug_log.uartLog.UART.RXD.$suggestSolution = "ball.D15";
- debug_log.uartLog.UART.TXD.$suggestSolution = "ball.C16";
- enet_cpsw1.RGMII.$suggestSolution           = "RGMII1";
--enet_cpsw1.RGMII.RD0.$suggestSolution       = "ball.W5";
--enet_cpsw1.RGMII.RD1.$suggestSolution       = "ball.Y5";
--enet_cpsw1.RGMII.RD2.$suggestSolution       = "ball.V6";
--enet_cpsw1.RGMII.RD3.$suggestSolution       = "ball.V5";
--enet_cpsw1.RGMII.RX_CTL.$suggestSolution    = "ball.W6";
--enet_cpsw1.RGMII.RXC.$suggestSolution       = "ball.AA5";
-+enet_cpsw1.RGMII.RD0.$suggestSolution       = "ball.AA13";
-+enet_cpsw1.RGMII.RD1.$suggestSolution       = "ball.U12";
-+enet_cpsw1.RGMII.RD2.$suggestSolution       = "ball.Y13";
-+enet_cpsw1.RGMII.RD3.$suggestSolution       = "ball.V12";
-+enet_cpsw1.RGMII.RXC.$suggestSolution       = "ball.W13";
- enet_cpsw1.RGMII.TD0.$suggestSolution       = "ball.V15";
- enet_cpsw1.RGMII.TD1.$suggestSolution       = "ball.V14";
- enet_cpsw1.RGMII.TD2.$suggestSolution       = "ball.W14";
+ gpio1.$name                    = "CONFIG_GPIO0";
+ gpio1.pinDir                   = "OUTPUT";
+@@ -93,25 +94,23 @@
+ mpu_armv77.size     = 27;
+ mpu_armv77.baseAddr = 0x60000000;
+ 
+-enet_cpsw1.$name                       = "CONFIG_ENET_CPSW0";
+-enet_cpsw1.PktInfoOnlyEnable           = true;
+-enet_cpsw1.LargePoolPktCount           = 32;
+-enet_cpsw1.mdioMode                    = "MDIO_MODE_MANUAL";
+-enet_cpsw1.macOnlyEn_macPort1          = true;
+-enet_cpsw1.macOnlyEn_macPort2          = true;
+-enet_cpsw1.macOnlyEn_hostPort          = true;
+-enet_cpsw1.txDmaChannel[0].$name       = "ENET_DMA_TX_CH0";
+-enet_cpsw1.rxDmaChannel[0].$name       = "ENET_DMA_RX_CH0";
+-enet_cpsw1.pinmux[0].$name             = "ENET_CPSW_PINMUX0";
+-enet_cpsw1.pinmux[0].MDIO.$assign      = "MDIO0";
+-enet_cpsw1.pinmux[0].MDIO.MDC.$assign  = "ball.R2";
+-enet_cpsw1.pinmux[0].MDIO.MDIO.$assign = "ball.P5";
+-enet_cpsw1.pinmux[0].RGMII1.$assign    = "RGMII1";
+-enet_cpsw1.pinmux[0].RGMII2.$assign    = "RGMII2";
+-enet_cpsw1.netifInstance.create(2);
+-enet_cpsw1.netifInstance[0].$name      = "NETIF_INST_ID0";
+-enet_cpsw1.netifInstance[1].$name      = "NETIF_INST_ID1";
+-enet_cpsw1.netifInstance[1].isDefault  = false;
++enet_cpsw1.$name                        = "CONFIG_ENET_CPSW0";
++enet_cpsw1.PktInfoOnlyEnable            = true;
++enet_cpsw1.LargePoolPktCount            = 32;
++enet_cpsw1.DisableMacPort2              = true;
++enet_cpsw1.mdioMode                     = "MDIO_MODE_MANUAL";
++enet_cpsw1.txDmaChannel[0].$name        = "ENET_DMA_TX_CH0";
++enet_cpsw1.rxDmaChannel[0].$name        = "ENET_DMA_RX_CH0";
++enet_cpsw1.pinmux[0].$name              = "ENET_CPSW_PINMUX0";
++enet_cpsw1.pinmux[0].MDIO.$assign       = "MDIO0";
++enet_cpsw1.pinmux[0].MDIO.MDC.$assign   = "ball.R2";
++enet_cpsw1.pinmux[0].MDIO.MDIO.$assign  = "ball.P5";
++enet_cpsw1.pinmux[0].RGMII1.$assign     = "RGMII1";
++enet_cpsw1.pinmux[0].RGMII1.RD0.$assign = "ball.AA13";
++enet_cpsw1.pinmux[0].RGMII2.$assign     = "RGMII2";
++enet_cpsw1.netifInstance.create(1);
++enet_cpsw1.netifInstance[0].$name       = "NETIF_INST_ID0";
++
+ 
+ const udma         = scripting.addModule("/drivers/udma/udma", {}, false);
+ const udma1        = udma.addInstance({}, false);
+@@ -125,12 +124,11 @@
+ debug_log.uartLog.UART.$suggestSolution             = "USART0";
+ debug_log.uartLog.UART.RXD.$suggestSolution         = "ball.D15";
+ debug_log.uartLog.UART.TXD.$suggestSolution         = "ball.C16";
+-enet_cpsw1.pinmux[0].RGMII1.RD0.$suggestSolution    = "ball.W5";
+-enet_cpsw1.pinmux[0].RGMII1.RD1.$suggestSolution    = "ball.Y5";
+-enet_cpsw1.pinmux[0].RGMII1.RD2.$suggestSolution    = "ball.V6";
+-enet_cpsw1.pinmux[0].RGMII1.RD3.$suggestSolution    = "ball.V5";
+-enet_cpsw1.pinmux[0].RGMII1.RX_CTL.$suggestSolution = "ball.W6";
+-enet_cpsw1.pinmux[0].RGMII1.RXC.$suggestSolution    = "ball.AA5";
++enet_cpsw1.pinmux[0].RGMII1.RD1.$suggestSolution    = "ball.U12";
++enet_cpsw1.pinmux[0].RGMII1.RD2.$suggestSolution    = "ball.Y13";
++enet_cpsw1.pinmux[0].RGMII1.RD3.$suggestSolution    = "ball.V12";
++enet_cpsw1.pinmux[0].RGMII1.RX_CTL.$suggestSolution = "ball.V13";
++enet_cpsw1.pinmux[0].RGMII1.RXC.$suggestSolution    = "ball.W13";
+ enet_cpsw1.pinmux[0].RGMII1.TD0.$suggestSolution    = "ball.V15";
+ enet_cpsw1.pinmux[0].RGMII1.TD1.$suggestSolution    = "ball.V14";
+ enet_cpsw1.pinmux[0].RGMII1.TD2.$suggestSolution    = "ball.W14";

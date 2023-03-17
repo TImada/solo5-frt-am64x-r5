@@ -27,7 +27,9 @@ FILES_device := \
 	ti_enet_config.c \
 	ti_enet_open_close.c \
 	ti_pinmux_config.c \
-	ti_power_clock_config.c
+	ti_power_clock_config.c \
+    ti_enet_lwipif.c \
+    ti_enet_soc.c
 
 FILES_PATH_enet = $(MCU_SDK_TOP)/examples/networking/lwip/enet_lwip_cpsw
 FILES_enet := \
@@ -35,8 +37,7 @@ FILES_enet := \
 	test_enet_cpsw.c
 
 FILES_PATH_board = $(FILES_PATH_enet)/am64x-evm/r5fss0-0_freertos
-FILES_board := \
-	board.c
+FILES_board := 
 
 FILES_PATH_frt = frt
 FILES_frt := \
@@ -53,13 +54,18 @@ INCLUDES_device := \
 	-I$(MCU_SDK_TOP)/source/networking/enet/utils/include \
 	-I$(MCU_SDK_TOP)/source/networking/enet/utils/V3 \
 	-I$(MCU_SDK_TOP)/source/networking/enet/core \
+	-I$(MCU_SDK_TOP)/source/networking/enet/core/include/ \
+	-I$(MCU_SDK_TOP)/source/networking/enet/core/include/core \
 	-I$(MCU_SDK_TOP)/source/networking/enet/core/include/phy \
+	-I$(MCU_SDK_TOP)/source/networking/enet/core/lwipif/inc \
 	-I$(MCU_SDK_TOP)/source/networking/enet/core/hw_include \
+	-I$(MCU_SDK_TOP)/source/networking/enet/soc/k3 \
+	-I$(MCU_SDK_TOP)/source/networking/enet/soc/k3/am64x_am243x \
 	-I$(MCU_SDK_TOP)/source/networking/enet/hw_include \
 	-I$(MCU_SDK_TOP)/source/networking/enet/hw_include/mdio/V5 \
 	-I$(MCU_SDK_TOP)/source/networking/lwip/lwip-stack/src/include \
 	-I$(MCU_SDK_TOP)/source/networking/lwip/lwip-port/freertos/include \
-	-I$(MCU_SDK_TOP)/source/networking/enet/core/lwipif/inc \
+	-I$(MCU_SDK_TOP)/source/networking/lwip/lwip-port/include \
 	-I$(MCU_SDK_TOP)/source/networking/lwip/lwip-contrib \
 	-I$(MCU_SDK_TOP)/source/networking/lwip/lwip-config/am64x \
 	-I$(MCU_SDK_TOP)/source/networking/lwip/lwip-port/freertos/include \
@@ -132,6 +138,9 @@ SYSCFG_GEN_FILES+=generated/ti_board_open_close.c generated/ti_board_open_close.
 SYSCFG_GEN_FILES+=generated/ti_enet_config.c generated/ti_enet_config.h
 SYSCFG_GEN_FILES+=generated/ti_enet_open_close.c generated/ti_enet_open_close.h
 SYSCFG_GEN_FILES+=generated/ti_power_clock_config.c generated/ti_power_clock_config.h
+SYSCFG_GEN_FILES+=generated/ti_enet_lwipif.c generated/ti_enet_lwipif.h
+SYSCFG_GEN_FILES+=generated/ti_enet_soc.c
+SYSCFG_GEN_FILES+=generated/ti_pru_io_config.inc
 
 .PHONY: all $(SOC_LIB) syscfg clean
 
